@@ -1,0 +1,6 @@
+*.tlog
+DrawSomeShit/proj.win32/Debug_v100/DrawSomeShit.exe.intermediate.manifest
+*.lastbuildstate
+DrawSomeShit/proj.win32/Debug_v100/vc100.idb
+*.sdf
+DrawSomeShit/proj.win32/ipch/drawsomeshit-8d3f7051/drawsomeshit-7a0f9ecc.ipch
