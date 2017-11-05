@@ -11,3 +11,5 @@ Instructions for setup:
 
 Oxygine API: http://oxygine.org/doc/api/classes.html
 
+Add to this if you run into any problems during setup.
+
