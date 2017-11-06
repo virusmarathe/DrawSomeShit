@@ -7,7 +7,7 @@ Instructions for setup:
  	-click check box for windows 8.1 SDK 
 
 2) Open ./DrawSomeShit/proj.win32/DrawSomeShit.sln
-  -Right click "DrawSomeShit" project on the side, click properties  
+  -right click "DrawSomeShit" project on the side, click properties  
   -select Configuration: "All Configurations"
   -set Configuration Properties > Debugging > Working Directory "../data"  
   -set Configuration Properties > Debugging > Enviroment "PATH=../data;%PATH%;"  
