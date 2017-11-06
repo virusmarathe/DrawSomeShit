@@ -75,7 +75,7 @@ public:
         _text->addTween(Actor::TweenScale(1.1f), 500, 1, true);
 
         //and change text
-        _text->setText("Clicked!");
+        _text->setText("Draw some shit!");
 
         //lets create and run sprite with simple animation
         runSprite();
