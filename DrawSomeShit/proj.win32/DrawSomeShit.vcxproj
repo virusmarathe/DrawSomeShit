@@ -117,9 +117,21 @@
   <ItemGroup>
     <ClCompile Include="../src/main.cpp" />
     <ClCompile Include="..\src\DSS.cpp" />
+    <ClCompile Include="..\src\Game.cpp" />
+    <ClCompile Include="..\src\GameScene.cpp" />
+    <ClCompile Include="..\src\MainMenuScene.cpp" />
+    <ClCompile Include="..\src\UIButton.cpp" />
+    <ClCompile Include="..\src\res.cpp" />
+    <ClCompile Include="..\src\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\DSS.h" />
+    <ClInclude Include="..\src\Game.h" />
+    <ClInclude Include="..\src\GameScene.h" />
+    <ClInclude Include="..\src\MainMenuScene.h" />
+    <ClInclude Include="..\src\UIButton.h" />
+    <ClInclude Include="..\src\res.h" />
+    <ClInclude Include="..\src\Scene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

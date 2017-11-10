@@ -1,20 +1,24 @@
 #include "oxygine-framework.h"
+#include "res.h"
+#include "Game.h"
+#include "MainMenuScene.h"
+#include "GameScene.h"
+
 #include <functional>
 using namespace oxygine;
-
-//it is our resources
-//in real project you would have more than one Resources declarations.
-//It is important on mobile devices with limited memory and you would load/unload them
-Resources gameResources;
 
 void DSS_preinit() {}
 
 //called from main.cpp
 void DSS_init()
 {
-    //load xml file with resources definition
-    gameResources.loadXML("res.xml");
+	res::load();
 
+	GameScene::instance = new GameScene;
+	MainMenuScene::instance	 = new MainMenuScene;
+
+	// show main menu
+	MainMenuScene::instance->show();
 }
 
 
@@ -27,6 +31,8 @@ void DSS_update()
 //called each frame from main.cpp
 void DSS_destroy()
 {
-    //free previously loaded resources
-    gameResources.free();
+	MainMenuScene::instance = 0;
+	GameScene::instance = 0;
+
+	res::free();
 }
