@@ -7,7 +7,7 @@
 #include "core/oxygine.h"
 #include "Stage.h"
 #include "DebugActor.h"
-#include "example.h"
+#include "DSS.h"
 
 
 using namespace oxygine;
@@ -22,7 +22,7 @@ int mainloop()
     bool done = core::update();
 
     // It gets passed to our example game implementation
-    example_update();
+    DSS_update();
 
     // Update our stage
     // Update all actors. Actor::update will also be called for all its children
@@ -48,7 +48,7 @@ void run()
 
     // Initialize Oxygine's internal stuff
     core::init_desc desc;
-    desc.title = "Oxygine Application";
+    desc.title = "Draw Some Shit!";
 
 #if OXYGINE_SDL || OXYGINE_EMSCRIPTEN
     // The initial window size can be set up here on SDL builds
@@ -58,7 +58,7 @@ void run()
 #endif
 
 
-    example_preinit();
+    DSS_preinit();
     core::init(&desc);
 
 
@@ -71,7 +71,7 @@ void run()
     DebugActor::show();
 
     // Initializes our example game. See example.cpp
-    example_init();
+    DSS_init();
 
 #ifdef EMSCRIPTEN
     /*
@@ -109,7 +109,7 @@ void run()
     */
 
     // See example.cpp for the shutdown function implementation
-    example_destroy();
+    DSS_destroy();
 
 
     //renderer.cleanup();
