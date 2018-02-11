@@ -3,6 +3,7 @@
 #include <math.h>
 
 #define PI 3.14159265
+#define DRAW_NEW_DISTANCE 5
 
 GameObject::GameObject()
 {
@@ -13,7 +14,11 @@ GameObject::GameObject()
 
 GameObject::GameObject(Vector2 startPos)
 {
+	mTimer = 0.0f;
+	mColorValue = 0.0f;
 	mPosition = startPos;
+	AddPoints(startPos);
+	mLastPointAddedPosition = Vector2(0, 0);
 }
 
 
@@ -36,22 +41,29 @@ void GameObject::update(float deltaTime)
 
 void GameObject::render()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
-
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	// move object to position
-	glTranslatef(mPosition.X, mPosition.Y, 0.0f);
+	// move object to position, relavent for models, not so much for drawing
+	//glTranslatef(mPosition.X, mPosition.Y, 0.0f);
 
 	glColor3f(cos(mColorValue), sin(mColorValue), 0.7f);
 
 	// for now draws a bullshit quad in screen space
 	// eventually will read through model data (position, color, normal)
-	glBegin(GL_QUADS);
-	glVertex2f(-50.0f, -50.0f);
-	glVertex2f(50.0f, -50.0f);
-	glVertex2f(50.0f, 50.0f);
-	glVertex2f(-50.0f, 50.0f);
+	glBegin(GL_LINE_STRIP);
+	for (int i = 0; i < mPoints.size(); i++)
+	{
+		glVertex2f(mPoints[i].X, mPoints[i].Y);
+	}
 	glEnd();
+}
+
+void GameObject::AddPoints(Vector2 newPoint)
+{
+	if (mLastPointAddedPosition.distSqr(newPoint) > DRAW_NEW_DISTANCE * DRAW_NEW_DISTANCE)
+	{
+		mPoints.push_back(newPoint);
+		mLastPointAddedPosition = newPoint;
+	}
 }

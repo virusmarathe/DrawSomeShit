@@ -21,5 +21,8 @@ int main(int argc, char * argv[])
 	}
 
 	mGame->clean();
+
+	delete mGame;
+
 	return 0;
 }

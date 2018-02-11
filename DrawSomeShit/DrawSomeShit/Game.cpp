@@ -1,6 +1,6 @@
 #include "Game.h"
 
-Game::Game() : mIsRunning(false), mLastFrameTime(0)
+Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 {
 }
 
@@ -52,10 +52,6 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 		std::cout << "Failed to initialize SDL subsystems!" << std::endl;
 		return;
 	}
-
-	// temporary game object creation
-	GameObject * expandingSquare = new GameObject(Vector2(width/2.0f, height/2.0f));
-	mActiveGameObjectList.push_back(expandingSquare);
 }
 
 void Game::setupOpenGL(int width, int height)
@@ -83,10 +79,20 @@ void Game::handleEvents()
 			mIsRunning = false;
 			break;
 
-		case SDLK_SPACE:
-			
+		case SDL_MOUSEBUTTONDOWN:
+			lastCreatedObject = new GameObject(Vector2(event.motion.x, event.motion.y));
+			mIsMouseDown = true;
+			mActiveGameObjectList.push_back(lastCreatedObject);
 			break;
-
+		case SDL_MOUSEMOTION:
+			if (mIsMouseDown)
+			{
+				lastCreatedObject->AddPoints(Vector2(event.motion.x, event.motion.y));
+			}
+			break;
+		case SDL_MOUSEBUTTONUP:
+			mIsMouseDown = false;
+			break;
 		default:
 			break;
 	}
