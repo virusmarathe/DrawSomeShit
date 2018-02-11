@@ -1,7 +1,12 @@
 #pragma once
 
 #include "SDL.h"
+#include <SDL_opengl.h>
+#include <gl/GL.h>
+#include <gl/GLU.h>
 #include <iostream>
+#include <vector>
+#include "GameObject.h"
 
 class Game
 {
@@ -24,8 +29,14 @@ public:
 	bool running() { return mIsRunning; }
 
 private:
+	void setupOpenGL();
+
+private:
 	bool mIsRunning;
 	SDL_Window * mWindow;
-	SDL_Renderer * mRenderer;
+	SDL_GLContext mContext;
+	Uint32 mLastFrameTime;
+
+	std::vector<GameObject*> mActiveGameObjectList;
 };
 
