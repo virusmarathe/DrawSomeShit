@@ -42,7 +42,7 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 			return;
 		}
 
-		setupOpenGL();
+		setupOpenGL(width, height);
 
 		mIsRunning = true;
 		mLastFrameTime = SDL_GetTicks();
@@ -54,15 +54,16 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 	}
 
 	// temporary game object creation
-	GameObject * expandingSquare = new GameObject();
+	GameObject * expandingSquare = new GameObject(Vector2(width/2.0f, height/2.0f));
 	mActiveGameObjectList.push_back(expandingSquare);
 }
 
-void Game::setupOpenGL()
+void Game::setupOpenGL(int width, int height)
 {
 	// clear out projection matrix
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+	glOrtho(0, width, height, 0, -1, 1);
 
 	// clear out model matrix matrix
 	glMatrixMode(GL_MODELVIEW);

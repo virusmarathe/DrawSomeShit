@@ -29,7 +29,7 @@ public:
 	bool running() { return mIsRunning; }
 
 private:
-	void setupOpenGL();
+	void setupOpenGL(int width, int height);
 
 private:
 	bool mIsRunning;
