@@ -2,6 +2,8 @@
 
 Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 {
+	mLeftCtrlPressed = false;
+	mZKeyPressed = false;
 }
 
 
@@ -93,8 +95,39 @@ void Game::handleEvents()
 		case SDL_MOUSEBUTTONUP:
 			mIsMouseDown = false;
 			break;
+		case SDL_KEYDOWN:
+			if (event.key.keysym.sym == SDLK_LCTRL)
+			{
+				mLeftCtrlPressed = true;
+			}
+			if (event.key.keysym.sym == SDLK_z)
+			{
+				mZKeyPressed = true;
+			}
+			break;
+		case SDL_KEYUP:
+			if (event.key.keysym.sym == SDLK_LCTRL)
+			{
+				mLeftCtrlPressed = false;
+			}
+			if (event.key.keysym.sym == SDLK_z)
+			{
+				mZKeyPressed = false;
+			}
+			break;
+
 		default:
 			break;
+	}
+
+	if (mLeftCtrlPressed && mZKeyPressed)
+	{
+		if (mActiveGameObjectList.size() > 0)
+		{
+			delete mActiveGameObjectList.back();
+			mActiveGameObjectList.pop_back();
+		}
+		mZKeyPressed = false;
 	}
 }
 
@@ -105,7 +138,10 @@ void Game::update()
 
 	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
 	{
-		mActiveGameObjectList[i]->update(deltaTime);
+		if (mActiveGameObjectList[i] != NULL)
+		{
+			mActiveGameObjectList[i]->update(deltaTime);
+		}
 	}
 
 	mLastFrameTime = currentFrameTime;
