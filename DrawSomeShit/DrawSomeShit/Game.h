@@ -6,7 +6,8 @@
 #include <gl/GLU.h>
 #include <iostream>
 #include <vector>
-#include "GameObject.h"
+#include <map>
+#include "PencilObject.h"
 #include "Vector2.h";
 
 class Game
@@ -39,10 +40,9 @@ private:
 	Uint32 mLastFrameTime;
 	bool mIsMouseDown;
 	GameObject * lastCreatedObject;
-	bool mLeftCtrlPressed;
-	bool mZKeyPressed;
 
 	// need switch this to an object pool so you don't create every object at runtime
 	std::vector<GameObject*> mActiveGameObjectList;
+	bool keysPressed[SDL_NUM_SCANCODES];
 };
 

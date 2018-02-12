@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SDL.h"
 #include <SDL_opengl.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
@@ -13,23 +14,16 @@ public:
 	GameObject(Vector2 startPos);
 	~GameObject();
 
-	virtual void update(float deltaTime);
+	virtual void update(float deltaTime) = 0;
 
-	virtual void render();
+	virtual void render() = 0;
 
-	void SetPosition(Vector2 pos) { mPosition = pos; }
+	virtual void handleInput(SDL_Event event) = 0;
 
-	void AddPoints(Vector2 newPoint);
+	void setPosition(Vector2 pos) { mPosition = pos; }
 
-private:
 
-	// very temporary variables, this is inteded to be a base class
-	float mTimer;
-	float mColorValue;
-
+protected:
 	Vector2 mPosition;
-	Vector2 mLastPointAddedPosition;
-
-	std::vector<Vector2> mPoints;
 };
 

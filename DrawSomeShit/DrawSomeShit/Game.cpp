@@ -2,8 +2,10 @@
 
 Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 {
-	mLeftCtrlPressed = false;
-	mZKeyPressed = false;
+	for (int i = 0; i < SDL_NUM_SCANCODES; i++)
+	{
+		keysPressed[i] = false;
+	}
 }
 
 
@@ -82,52 +84,34 @@ void Game::handleEvents()
 			break;
 
 		case SDL_MOUSEBUTTONDOWN:
-			lastCreatedObject = new GameObject(Vector2(event.motion.x, event.motion.y));
-			mIsMouseDown = true;
-			mActiveGameObjectList.push_back(lastCreatedObject);
-			break;
-		case SDL_MOUSEMOTION:
-			if (mIsMouseDown)
-			{
-				lastCreatedObject->AddPoints(Vector2(event.motion.x, event.motion.y));
-			}
-			break;
-		case SDL_MOUSEBUTTONUP:
-			mIsMouseDown = false;
+			// for now mouse button is creating a pencil object, but what gets created should change based on selection, maybe a ObjectManager
+			mActiveGameObjectList.push_back(new PencilObject(Vector2(event.motion.x, event.motion.y)));
 			break;
 		case SDL_KEYDOWN:
-			if (event.key.keysym.sym == SDLK_LCTRL)
-			{
-				mLeftCtrlPressed = true;
-			}
-			if (event.key.keysym.sym == SDLK_z)
-			{
-				mZKeyPressed = true;
-			}
+			keysPressed[event.key.keysym.scancode] = true;
 			break;
 		case SDL_KEYUP:
-			if (event.key.keysym.sym == SDLK_LCTRL)
-			{
-				mLeftCtrlPressed = false;
-			}
-			if (event.key.keysym.sym == SDLK_z)
-			{
-				mZKeyPressed = false;
-			}
+			keysPressed[event.key.keysym.scancode] = false;
 			break;
 
 		default:
 			break;
 	}
 
-	if (mLeftCtrlPressed && mZKeyPressed)
+	// undo implementation by popping the last object from the stack
+	if (keysPressed[SDL_SCANCODE_LCTRL] && keysPressed[SDL_SCANCODE_Z])
 	{
 		if (mActiveGameObjectList.size() > 0)
 		{
 			delete mActiveGameObjectList.back();
 			mActiveGameObjectList.pop_back();
 		}
-		mZKeyPressed = false;
+		keysPressed[SDL_SCANCODE_Z] = false;
+	}
+
+	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
+	{
+		mActiveGameObjectList[i]->handleInput(event);
 	}
 }
 
