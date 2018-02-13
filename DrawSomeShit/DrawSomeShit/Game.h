@@ -9,6 +9,7 @@
 #include <map>
 #include "PencilObject.h"
 #include "Vector2.h";
+#include <winsock.h>
 
 class Game
 {

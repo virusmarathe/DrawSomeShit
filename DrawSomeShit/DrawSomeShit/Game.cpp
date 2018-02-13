@@ -6,6 +6,13 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	{
 		keysPressed[i] = false;
 	}
+
+	WSAData wsaData;
+	if (WSAStartup(MAKEWORD(1, 1), &wsaData) != 0)
+	{
+		std::cerr << "WSAStartup failed." << std::endl;
+		exit(1);
+	}
 }
 
 
@@ -75,10 +82,10 @@ void Game::setupOpenGL(int width, int height)
 void Game::handleEvents()
 {
 	SDL_Event event;
-	SDL_PollEvent(&event);
-
-	switch (event.type)
+	while (SDL_PollEvent(&event))
 	{
+		switch (event.type)
+		{
 		case SDL_QUIT:
 			mIsRunning = false;
 			break;
@@ -96,6 +103,12 @@ void Game::handleEvents()
 
 		default:
 			break;
+		}
+
+		for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
+		{
+			mActiveGameObjectList[i]->handleInput(event);
+		}
 	}
 
 	// undo implementation by popping the last object from the stack
@@ -107,12 +120,7 @@ void Game::handleEvents()
 			mActiveGameObjectList.pop_back();
 		}
 		keysPressed[SDL_SCANCODE_Z] = false;
-	}
-
-	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
-	{
-		mActiveGameObjectList[i]->handleInput(event);
-	}
+	}	
 }
 
 void Game::update()
@@ -150,6 +158,8 @@ void Game::clean()
 	{
 		delete mActiveGameObjectList[i];
 	}
+
+	WSACleanup();
 
 	SDL_DestroyWindow(mWindow);
 	SDL_Quit();
