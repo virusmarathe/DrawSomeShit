@@ -11,7 +11,7 @@ PencilObject::PencilObject()
 	mFinishedDrawing = false;
 }
 
-PencilObject::PencilObject(Vector2 startPos)
+PencilObject::PencilObject(Vector2 startPos) : GameObject(startPos)
 {
 	mTimer = 0.0f;
 	mColorValue = 0.0f;
@@ -48,6 +48,10 @@ void PencilObject::render()
 	//glTranslatef(mPosition.X, mPosition.Y, 0.0f);
 
 	glColor3f(cos(mColorValue), sin(mColorValue), 0.7f);
+
+	glBegin(GL_POINTS);
+	glVertex2f(mPosition.X, mPosition.Y);
+	glEnd();
 
 	// draws a line geometry of all the points your mouse has gone over
 	glBegin(GL_LINE_STRIP);

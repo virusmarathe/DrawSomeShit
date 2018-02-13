@@ -105,10 +105,18 @@ void Game::handleEvents()
 			break;
 		}
 
+		// should maintain separate input event manager that dispatches input events that objects can listen for if they still care about input
+		// for now forwarding event data to most recent object
+		if (mActiveGameObjectList.size() > 0)
+		{
+			mActiveGameObjectList[mActiveGameObjectList.size() - 1]->handleInput(event);
+		}
+		/*
 		for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
 		{
 			mActiveGameObjectList[i]->handleInput(event);
 		}
+		*/
 	}
 
 	// undo implementation by popping the last object from the stack
