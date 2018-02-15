@@ -4,12 +4,12 @@
 #include <SDL_opengl.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
+#include "SDL_net.h"
 #include <iostream>
 #include <vector>
 #include <map>
 #include "PencilObject.h"
 #include "Vector2.h";
-#include <winsock.h>
 
 class Game
 {

@@ -5,14 +5,7 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	for (int i = 0; i < SDL_NUM_SCANCODES; i++)
 	{
 		keysPressed[i] = false;
-	}
-
-	WSAData wsaData;
-	if (WSAStartup(MAKEWORD(1, 1), &wsaData) != 0)
-	{
-		std::cerr << "WSAStartup failed." << std::endl;
-		exit(1);
-	}
+	}	
 }
 
 
@@ -44,25 +37,28 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 		{
 			std::cout << "Failed to create window!" << std::endl;
 			return;
-		}
-
-		mContext = SDL_GL_CreateContext(mWindow);
-		if (mContext == NULL)
-		{
-			std::cout << "Failed to create openGL renderer!" << std::endl;
-			return;
-		}
-
-		setupOpenGL(width, height);
-
-		mIsRunning = true;
-		mLastFrameTime = SDL_GetTicks();
+		}		
 	}
 	else
 	{
 		std::cout << "Failed to initialize SDL subsystems!" << std::endl;
 		return;
 	}
+
+	// initialize opengl
+	mContext = SDL_GL_CreateContext(mWindow);
+	if (mContext == NULL)
+	{
+		std::cout << "Failed to create openGL renderer!" << std::endl;
+		return;
+	}
+	setupOpenGL(width, height);
+
+	// initialize sdl_net systems
+	SDLNet_Init();
+
+	mIsRunning = true;
+	mLastFrameTime = SDL_GetTicks();
 }
 
 void Game::setupOpenGL(int width, int height)
@@ -167,8 +163,7 @@ void Game::clean()
 		delete mActiveGameObjectList[i];
 	}
 
-	WSACleanup();
-
+	SDLNet_Quit();
 	SDL_DestroyWindow(mWindow);
 	SDL_Quit();
 
