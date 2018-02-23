@@ -4,12 +4,12 @@
 #include <SDL_opengl.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
-#include "SDL_net.h"
 #include <iostream>
 #include <vector>
 #include <map>
 #include "PencilObject.h"
-#include "Vector2.h";
+#include "Vector2.h"
+#include "NetworkManager.h"
 
 class Game
 {
@@ -40,7 +40,6 @@ private:
 	SDL_GLContext mContext;
 	Uint32 mLastFrameTime;
 	bool mIsMouseDown;
-	GameObject * lastCreatedObject;
 
 	// need switch this to an object pool so you don't create every object at runtime
 	std::vector<GameObject*> mActiveGameObjectList;

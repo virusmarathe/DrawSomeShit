@@ -54,8 +54,7 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 	}
 	setupOpenGL(width, height);
 
-	// initialize sdl_net systems
-	SDLNet_Init();
+	NetworkManager::Init();
 
 	mIsRunning = true;
 	mLastFrameTime = SDL_GetTicks();
@@ -107,12 +106,6 @@ void Game::handleEvents()
 		{
 			mActiveGameObjectList[mActiveGameObjectList.size() - 1]->handleInput(event);
 		}
-		/*
-		for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
-		{
-			mActiveGameObjectList[i]->handleInput(event);
-		}
-		*/
 	}
 
 	// undo implementation by popping the last object from the stack
@@ -163,7 +156,7 @@ void Game::clean()
 		delete mActiveGameObjectList[i];
 	}
 
-	SDLNet_Quit();
+	NetworkManager::Quit();
 	SDL_DestroyWindow(mWindow);
 	SDL_Quit();
 
