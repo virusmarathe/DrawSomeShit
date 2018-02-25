@@ -1,7 +1,7 @@
 #include "PencilObject.h"
 
 
-#define PI 3.14159265
+#define PI 3.14159265f
 #define DRAW_NEW_DISTANCE 5
 
 PencilObject::PencilObject()
@@ -55,7 +55,7 @@ void PencilObject::render()
 
 	// draws a line geometry of all the points your mouse has gone over
 	glBegin(GL_LINE_STRIP);
-	for (int i = 0; i < mPoints.size(); i++)
+	for (size_t i = 0; i < mPoints.size(); i++)
 	{
 		glVertex2f(mPoints[i].X, mPoints[i].Y);
 	}
@@ -80,7 +80,7 @@ void PencilObject::handleInput(SDL_Event event)
 		case SDL_MOUSEMOTION:
 			if (!mFinishedDrawing)
 			{
-				addPoints(Vector2(event.motion.x, event.motion.y));
+				addPoints(Vector2((float)event.motion.x, (float)event.motion.y));
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
