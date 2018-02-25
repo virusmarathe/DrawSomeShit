@@ -1,5 +1,7 @@
 #pragma once
 #include "GameObject.h"
+#include "Game.h"
+
 class PencilObject : public GameObject
 {
 public:
@@ -12,6 +14,8 @@ public:
 	void render();
 
 	void handleInput(SDL_Event event);
+
+	void HandleNetworkData(charbuf &buf);
 
 private:
 	void addPoints(Vector2 newPoint);

@@ -16,3 +16,7 @@ GameObject::GameObject(Vector2 startPos)
 GameObject::~GameObject()
 {
 }
+
+void GameObject::HandleNetworkData(charbuf & buf)
+{
+}

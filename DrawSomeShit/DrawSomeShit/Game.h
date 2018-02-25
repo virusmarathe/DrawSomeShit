@@ -4,6 +4,7 @@
 #include <SDL_opengl.h>
 #include <gl/GL.h>
 #include <gl/GLU.h>
+#include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -16,6 +17,8 @@ class Game
 public:
 	Game();
 	~Game();
+
+	static Game * Instance() { return sInstance; }
 
 	// initialize systems
 	void init(const char * title, int xPos, int yPos, int width, int height, bool fullscreen);
@@ -31,12 +34,16 @@ public:
 
 	bool running() { return mIsRunning; }
 
+	void SendNetworkMessage(charbuf & dataBuf);
+
 private:
 	void setupOpenGL(int width, int height);
 	void setupConnection();
 	void handleNetworkData();
 
 private:
+	static Game * sInstance;
+
 	bool mIsRunning;
 	SDL_Window * mWindow;
 	SDL_GLContext mContext;
@@ -54,5 +61,7 @@ private:
 	ConnectionInfo * mRemoteIP;
 	NetworkMessage mMsg;
 	HostSocketTCP * mTCPListener;
+
+	std::vector<GameObject *> mNetworkedGameObjectList;
 };
 

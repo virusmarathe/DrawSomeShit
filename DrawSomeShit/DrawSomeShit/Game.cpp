@@ -2,8 +2,19 @@
 
 #define PORT 6969
 
+Game * Game::sInstance = NULL;
+
 Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 {
+	if (sInstance == NULL)
+	{
+		sInstance = this;
+	}
+	else
+	{
+		std::cerr << "Got a 2nd instance of game somehow. This shouldn't happen.";
+	}
+
 	for (int i = 0; i < SDL_NUM_SCANCODES; i++)
 	{
 		keysPressed[i] = false;
@@ -63,6 +74,13 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 	}
 	setupOpenGL(width, height);
 	mLastFrameTime = SDL_GetTicks();
+}
+
+void Game::SendNetworkMessage(charbuf & dataBuf)
+{
+	mMsg.LoadBytes(dataBuf, 256);
+	mMsg.Finish();
+	mTCPClient->Send(mMsg);
 }
 
 void Game::setupOpenGL(int width, int height)
@@ -157,7 +175,32 @@ void Game::handleNetworkData()
 			{
 				char buf[256];
 				mMsg.UnLoadBytes(buf);
-				std::cout << buf;
+//				std::cout << buf << std::endl;
+				char originalBuf[256];
+				strcpy_s(originalBuf, buf);
+				char * nextToken;
+				char separators[] = ",";
+				char * pch = strtok_s(buf, separators, &nextToken);
+				ObjectNetworkMessageType type = (ObjectNetworkMessageType)atoi(pch);
+				int x, y;
+				switch (type)
+				{
+				case CREATE:
+					pch = strtok_s(NULL, separators, &nextToken);
+					x = atoi(pch);
+					pch = strtok_s(NULL, separators, &nextToken);
+					y = atoi(pch);
+					mNetworkedGameObjectList.push_back(new PencilObject(Vector2(x, y)));
+					break;
+				case UPDATE:
+				case FINISH:
+					if (mNetworkedGameObjectList.size() > 0)
+					{
+						mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(originalBuf);
+					}
+					break;
+				}
+				std::cout << type << std::endl;
 			}
 			else
 			{
@@ -184,10 +227,8 @@ void Game::handleEvents()
 			if (mConnected)
 			{
 				charbuf buf;
-				sprintf_s(buf, "Mouse clicked at: (%d, %d)\n", event.motion.x, event.motion.y);
-				mMsg.LoadBytes(buf, 256);
-				mMsg.Finish();
-				mTCPClient->Send(mMsg);
+				sprintf_s(buf, "%d, %d, %d", ObjectNetworkMessageType::CREATE, event.motion.x, event.motion.y);
+				SendNetworkMessage(buf);
 			}
 			break;
 		case SDL_KEYDOWN:
@@ -236,6 +277,15 @@ void Game::update()
 		}
 	}
 
+	for (size_t i = 0; i < mNetworkedGameObjectList.size(); i++)
+	{
+		if (mNetworkedGameObjectList[i] != NULL)
+		{
+			mNetworkedGameObjectList[i]->update(deltaTime);
+		}
+	}
+
+
 	mLastFrameTime = currentFrameTime;
 }
 
@@ -249,6 +299,11 @@ void Game::render()
 		mActiveGameObjectList[i]->render();
 	}
 
+	for (size_t i = 0; i < mNetworkedGameObjectList.size(); i++)
+	{
+		mNetworkedGameObjectList[i]->render();
+	}
+
 	SDL_GL_SwapWindow(mWindow);
 }
 
@@ -259,6 +314,11 @@ void Game::clean()
 		delete mActiveGameObjectList[i];
 	}
 
+	for (size_t i = 0; i < mNetworkedGameObjectList.size(); i++)
+	{
+		delete mNetworkedGameObjectList[i];
+	}
+	
 	delete mTCPListener;
 	delete mTCPClient;
 	delete mRemoteIP;

@@ -6,6 +6,14 @@
 #include <gl/GLU.h>
 #include "Vector2.h"
 #include <vector>
+#include "NetworkManager.h"
+
+enum ObjectNetworkMessageType
+{
+	CREATE,
+	UPDATE,
+	FINISH
+};
 
 class GameObject
 {
@@ -21,6 +29,8 @@ public:
 	virtual void handleInput(SDL_Event event) = 0;
 
 	void setPosition(Vector2 pos) { mPosition = pos; }
+
+	virtual void HandleNetworkData(charbuf &buf);
 
 
 protected:

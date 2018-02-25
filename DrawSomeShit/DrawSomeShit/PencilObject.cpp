@@ -81,13 +81,43 @@ void PencilObject::handleInput(SDL_Event event)
 			if (!mFinishedDrawing)
 			{
 				addPoints(Vector2((float)event.motion.x, (float)event.motion.y));
+				charbuf buf;
+				sprintf_s(buf, "%d, %d, %d", ObjectNetworkMessageType::UPDATE, event.motion.x, event.motion.y);
+				Game::Instance()->SendNetworkMessage(buf);
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
 			mFinishedDrawing = true;
+			charbuf buf;
+			sprintf_s(buf, "%d", ObjectNetworkMessageType::FINISH);
+			Game::Instance()->SendNetworkMessage(buf);
 			break;
 	
 		default:
 			break;
 	}
+}
+
+void PencilObject::HandleNetworkData(charbuf & buf)
+{
+	char * nextToken;
+	char separators[] = ",";
+	char * pch = strtok_s(buf, separators, &nextToken);
+	ObjectNetworkMessageType type = (ObjectNetworkMessageType)atoi(pch);
+	int x, y;
+	switch (type)
+	{
+	case UPDATE:
+		pch = strtok_s(NULL, separators, &nextToken);
+		x = atoi(pch);
+		pch = strtok_s(NULL, separators, &nextToken);
+		y = atoi(pch);
+		addPoints(Vector2((float)x, (float)y));
+		break;
+	case FINISH:
+		mFinishedDrawing = true;
+		break;
+	}
+	std::cout << type << std::endl;
+
 }
