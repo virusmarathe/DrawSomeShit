@@ -118,6 +118,4 @@ void PencilObject::HandleNetworkData(charbuf & buf)
 		mFinishedDrawing = true;
 		break;
 	}
-	std::cout << type << std::endl;
-
 }
