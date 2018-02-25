@@ -157,7 +157,7 @@ bool TCPSocketBase::Ready() const
 	{
 		SDLNET_ERROR("SDLNet_CheckSockets");
 	}
-	else
+	else if (numReady > 0)
 	{
 		ready = SDLNet_SocketReady(mSocket);
 	}

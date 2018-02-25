@@ -4,6 +4,14 @@
 
 typedef char charbuf[256];
 
+enum ConnectionType
+{
+	NONE,
+	SERVER,
+	CLIENT,
+	HOST
+};
+
 class NetworkManager
 {
 public:

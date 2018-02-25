@@ -33,6 +33,8 @@ public:
 
 private:
 	void setupOpenGL(int width, int height);
+	void setupConnection();
+	void handleNetworkData();
 
 private:
 	bool mIsRunning;
@@ -44,5 +46,13 @@ private:
 	// need switch this to an object pool so you don't create every object at runtime
 	std::vector<GameObject*> mActiveGameObjectList;
 	bool keysPressed[SDL_NUM_SCANCODES];
+	
+	// networking variables
+	bool mConnected;
+	ConnectionType mConnectionType;
+	ClientSocketTCP * mTCPClient;
+	ConnectionInfo * mRemoteIP;
+	NetworkMessage mMsg;
+	HostSocketTCP * mTCPListener;
 };
 
