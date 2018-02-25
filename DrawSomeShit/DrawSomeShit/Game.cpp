@@ -200,7 +200,6 @@ void Game::handleNetworkData()
 					}
 					break;
 				}
-				std::cout << type << std::endl;
 			}
 			else
 			{
