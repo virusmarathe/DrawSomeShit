@@ -322,7 +322,7 @@ bool ClientSocketTCP::Recieve(NetworkMessage & data, int index)
 	}
 }
 
-bool ClientSocketTCP::Send(NetworkMessage & data)
+bool ClientSocketTCP::Send(NetworkMessage & data, int indexToIgnore)
 {
 	charbuf buf;
 	int len;
@@ -333,7 +333,7 @@ bool ClientSocketTCP::Send(NetworkMessage & data)
 
 		for (int i = 0; i < MAX_SOCKETS; i++)
 		{
-			if (mSockets[i] == NULL) continue;
+			if (mSockets[i] == NULL || i == indexToIgnore) continue;
 
 			if (SDLNet_TCP_Send(mSockets[i], (void*)buf, len) < len)
 			{

@@ -83,6 +83,13 @@ void Game::SendNetworkMessage(charbuf & dataBuf)
 	mTCPClient->Send(mMsg);
 }
 
+void Game::ForwardMessageToClients(charbuf & dataBuf, int clientIndex)
+{
+	mMsg.LoadBytes(dataBuf, 256);
+	mMsg.Finish();
+	mTCPClient->Send(mMsg, clientIndex);
+}
+
 void Game::setupOpenGL(int width, int height)
 {
 	// clear out projection matrix
@@ -187,7 +194,7 @@ void Game::handleNetworkData()
 					{
 						char buf[256];
 						mMsg.UnLoadBytes(buf);
-	 					SendNetworkMessage(buf);
+						ForwardMessageToClients(buf, i);
 
 						int packedData;
 						memcpy(&packedData, buf, sizeof(int));

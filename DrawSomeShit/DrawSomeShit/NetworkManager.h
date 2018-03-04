@@ -114,7 +114,7 @@ public:
 	ConnectionInfo GetConnectionInfo() { return mRemoteConnectionInfo; }
 
 	bool Recieve(NetworkMessage &data, int index);
-	bool Send(NetworkMessage &data);
+	bool Send(NetworkMessage &data, int indexToIgnore = -1);
 
 	virtual void OnReady();
 
