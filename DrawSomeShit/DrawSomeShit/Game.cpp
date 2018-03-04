@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #define PORT 6969
+#define MAX_OBJECTS 10000
 
 Game * Game::sInstance = NULL;
 
@@ -25,6 +26,8 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mConnected = false;
 	mRemoteIP = NULL;
 	mConnectionType = ConnectionType::NONE;
+	mPlayerID = -1;
+	mObjectIDCounter = 0;
 }
 
 
@@ -142,6 +145,8 @@ void Game::setupConnection()
 			exit(EXIT_FAILURE);
 		}
 		mTCPClient = new ClientSocketTCP();
+		mTCPClient->SetPlayerID(0);
+		mPlayerID = 0;
 	}
 	else if (mConnectionType == ConnectionType::CLIENT)
 	{
@@ -186,18 +191,83 @@ void Game::handleNetworkData()
 
 		if (mTCPClient->Ready())
 		{
-			if (mConnectionType == ConnectionType::HOST)
+			if (mPlayerID == -1)
 			{
-				for (int i = 0; i < MAX_SOCKETS; i++)
+				if (mTCPClient->Recieve(mMsg, 0))
 				{
-					if (mTCPClient->Recieve(mMsg, i))
+					char buf[256];
+					mMsg.UnLoadBytes(buf);
+					memcpy(&mPlayerID, buf, sizeof(int));
+					std::cout << "Player ID set to " << mPlayerID << std::endl;
+				}
+			}
+			else
+			{
+				if (mConnectionType == ConnectionType::HOST)
+				{
+					for (int i = 0; i < MAX_SOCKETS; i++)
+					{
+						if (mTCPClient->Recieve(mMsg, i))
+						{
+							char buf[256];
+							mMsg.UnLoadBytes(buf);
+							ForwardMessageToClients(buf, i);
+
+							int offset = 0;
+							int id;
+							memcpy(&id, buf + offset, sizeof(int));
+							offset += sizeof(int);
+
+							int packedData;
+							memcpy(&packedData, buf + offset, sizeof(int));
+							ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
+							int x = (packedData & 0x000FFF00) >> 8;
+							int y = (packedData & 0xFFF00000) >> 20;
+
+							switch (type2)
+							{
+							case CREATE:
+							{
+								PencilObject * obj = new PencilObject(Vector2(x, y));
+								obj->SetID(id);
+								std::cout << "Created object id " << obj->GetID() << std::endl;
+								mNetworkedGameObjectList.push_back(obj);
+								mNetworkedGameObjectMap[obj->GetID()] = obj;
+								break;
+							}
+							case UPDATE:
+							case FINISH:
+								if (mNetworkedGameObjectList.size() > 0)
+								{
+									//mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(packedData);
+									if (mNetworkedGameObjectMap[id] != NULL)
+									{
+										mNetworkedGameObjectMap[id]->HandleNetworkData(packedData);
+									}
+								}
+								break;
+							}
+						}
+						else
+						{
+							//mConnected = false;
+						}
+					}
+				}
+				else if (mConnectionType == ConnectionType::CLIENT)
+				{
+					if (mTCPClient->Recieve(mMsg, 0))
 					{
 						char buf[256];
 						mMsg.UnLoadBytes(buf);
-						ForwardMessageToClients(buf, i);
+
+						int offset = 0;
+						int id;
+						memcpy(&id, buf + offset, sizeof(int));
+						offset += sizeof(int);
 
 						int packedData;
-						memcpy(&packedData, buf, sizeof(int));
+						memcpy(&packedData, buf + offset, sizeof(int));
 						ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
 						int x = (packedData & 0x000FFF00) >> 8;
 						int y = (packedData & 0xFFF00000) >> 20;
@@ -205,13 +275,23 @@ void Game::handleNetworkData()
 						switch (type2)
 						{
 						case CREATE:
-							mNetworkedGameObjectList.push_back(new PencilObject(Vector2(x, y)));
+						{
+							PencilObject * obj = new PencilObject(Vector2(x, y));
+							obj->SetID(id);
+							std::cout << "Created object id " << obj->GetID() << std::endl;
+							mNetworkedGameObjectList.push_back(obj);
+							mNetworkedGameObjectMap[obj->GetID()] = obj;
 							break;
+						}
 						case UPDATE:
 						case FINISH:
 							if (mNetworkedGameObjectList.size() > 0)
 							{
-								mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(buf);
+								if (mNetworkedGameObjectMap[id] != NULL)
+								{
+									//								mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(packedData);
+									mNetworkedGameObjectMap[id]->HandleNetworkData(packedData);
+								}
 							}
 							break;
 						}
@@ -220,40 +300,8 @@ void Game::handleNetworkData()
 					{
 						//mConnected = false;
 					}
-				}				
-			}
-			else if (mConnectionType == ConnectionType::CLIENT)
-			{
-				if (mTCPClient->Recieve(mMsg, 0))
-				{
-					char buf[256];
-					mMsg.UnLoadBytes(buf);
-
-					int packedData;
-					memcpy(&packedData, buf, sizeof(int));
-					ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
-					int x = (packedData & 0x000FFF00) >> 8;
-					int y = (packedData & 0xFFF00000) >> 20;
-
-					switch (type2)
-					{
-					case CREATE:
-						mNetworkedGameObjectList.push_back(new PencilObject(Vector2(x, y)));
-						break;
-					case UPDATE:
-					case FINISH:
-						if (mNetworkedGameObjectList.size() > 0)
-						{
-							mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(buf);
-						}
-						break;
-					}
 				}
-				else
-				{
-					//mConnected = false;
-				}
-			}	
+			}			
 		}
 	}
 }
@@ -270,19 +318,30 @@ void Game::handleEvents()
 			break;
 
 		case SDL_MOUSEBUTTONDOWN:
+		{
 			// for now mouse button is creating a pencil object, but what gets created should change based on selection, maybe a ObjectManager
-			mActiveGameObjectList.push_back(new PencilObject(Vector2(event.motion.x, event.motion.y)));
+			PencilObject * obj = new PencilObject(Vector2(event.motion.x, event.motion.y));
+			obj->SetID(mPlayerID * MAX_OBJECTS + mObjectIDCounter);
+			mActiveGameObjectList.push_back(obj);
+			mObjectIDCounter++;
 			if (mConnected)
-			{			
+			{
 				charbuf buf;
+				int offset = 0;
+
+				int id = obj->GetID();
+				memcpy(buf + offset, &id, sizeof(int));
+				offset += sizeof(int);
+
 				int packedData = 0;	// 32 bit data
 				packedData |= ObjectNetworkMessageType::CREATE; // 0-7 bits command/id
 				packedData |= event.motion.x << 8; 				// 8-19 bits x
 				packedData |= event.motion.y << 20;				// 20-31 bits y
-				memcpy(buf, &packedData, sizeof(int));
+				memcpy(buf + offset, &packedData, sizeof(int));
 				SendNetworkMessage(buf);
 			}
 			break;
+		}
 		case SDL_KEYDOWN:
 			keysPressed[event.key.keysym.scancode] = true;
 			break;

@@ -54,7 +54,7 @@ private:
 	// need switch this to an object pool so you don't create every object at runtime
 	std::vector<GameObject*> mActiveGameObjectList;
 	bool keysPressed[SDL_NUM_SCANCODES];
-	
+
 	// networking variables
 	bool mConnected;
 	ConnectionType mConnectionType;
@@ -64,5 +64,8 @@ private:
 	HostSocketTCP * mTCPListener;
 
 	std::vector<GameObject *> mNetworkedGameObjectList;
+	std::map<int, GameObject*> mNetworkedGameObjectMap;
+	int mPlayerID;
+	int mObjectIDCounter;
 };
 

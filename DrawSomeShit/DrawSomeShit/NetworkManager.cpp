@@ -40,7 +40,7 @@ int NetworkMessage::NumToUnload()
 {
 	if (mState == FULL)
 	{
-		return 4;// strlen(mBuffer) + 1;
+		return 8;// strlen(mBuffer) + 1;
 	}
 	return 0;
 }
@@ -196,6 +196,8 @@ HostSocketTCP::HostSocketTCP(ConnectionInfo * addressInfo)
 		SDLNet_FreeSocketSet(mSet);
 		SDLNET_ERROR("SDLNet_TCP_Open");
 	}
+
+	mPlayerIDCounter = 0;
 }
 
 HostSocketTCP::HostSocketTCP(Uint16 port)
@@ -224,6 +226,8 @@ bool HostSocketTCP::Accept(ClientSocketTCP &clientSocket)
 	if (sock != NULL)
 	{
 		clientSocket.SetSocket(sock);
+		int nextID = GetNextPlayerID();
+		SDLNet_TCP_Send(sock, &nextID, sizeof(int));
 		return true;
 	}
 	return false;
@@ -231,6 +235,12 @@ bool HostSocketTCP::Accept(ClientSocketTCP &clientSocket)
 
 void HostSocketTCP::OnReady()
 {
+}
+
+int HostSocketTCP::GetNextPlayerID()
+{
+	mPlayerIDCounter++;
+	return mPlayerIDCounter;
 }
 
 //===================================================================================================================

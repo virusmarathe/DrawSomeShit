@@ -30,10 +30,13 @@ public:
 
 	void setPosition(Vector2 pos) { mPosition = pos; }
 
-	virtual void HandleNetworkData(charbuf &buf);
+	virtual void HandleNetworkData(int packedData);
 
+	void SetID(int id) { mID = id; }
+	int GetID() { return mID; }
 
 protected:
 	Vector2 mPosition;
+	int mID;
 };
 

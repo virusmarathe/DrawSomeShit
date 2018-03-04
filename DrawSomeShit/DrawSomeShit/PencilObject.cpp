@@ -82,11 +82,17 @@ void PencilObject::handleInput(SDL_Event event)
 			{
 				addPoints(Vector2((float)event.motion.x, (float)event.motion.y));
 				charbuf buf;
+				int offset = 0;
+
+				int id = GetID();
+				memcpy(buf + offset, &id, sizeof(int));
+				offset += sizeof(int);
+
 				int packedData = 0;
 				packedData |= ObjectNetworkMessageType::UPDATE;
 				packedData |= event.motion.x << 8;
 				packedData |= event.motion.y << 20;
-				memcpy(buf, &packedData, sizeof(int));
+				memcpy(buf + offset, &packedData, sizeof(int));
 				Game::Instance()->SendNetworkMessage(buf);
 			}
 			break;
@@ -94,8 +100,14 @@ void PencilObject::handleInput(SDL_Event event)
 		{
 			mFinishedDrawing = true;
 			charbuf buf;
+			int offset = 0;
+
+			int id = GetID();
+			memcpy(buf + offset, &id, sizeof(int));
+			offset += sizeof(int);
+
 			int messageType = ObjectNetworkMessageType::FINISH;
-			memcpy(buf, &messageType, sizeof(int));
+			memcpy(buf + offset, &messageType, sizeof(int));
 			Game::Instance()->SendNetworkMessage(buf);
 			break;
 		}
@@ -104,10 +116,8 @@ void PencilObject::handleInput(SDL_Event event)
 	}
 }
 
-void PencilObject::HandleNetworkData(charbuf & buf)
+void PencilObject::HandleNetworkData(int packedData)
 {
-	int packedData;
-	memcpy(&packedData, buf, sizeof(int));
 	ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);// = (ObjectNetworkMessageType)atoi(pch);
 	int x = (packedData & 0x000FFF00) >> 8;
 	int y = (packedData & 0xFFF00000) >> 20;

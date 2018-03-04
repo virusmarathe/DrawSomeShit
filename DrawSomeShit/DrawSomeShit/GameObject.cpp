@@ -17,6 +17,6 @@ GameObject::~GameObject()
 {
 }
 
-void GameObject::HandleNetworkData(charbuf & buf)
+void GameObject::HandleNetworkData(int packedData)
 {
 }

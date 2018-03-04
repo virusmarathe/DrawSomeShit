@@ -15,7 +15,7 @@ public:
 
 	void handleInput(SDL_Event event);
 
-	void HandleNetworkData(charbuf &buf);
+	void HandleNetworkData(int packedData);
 
 private:
 	void addPoints(Vector2 newPoint);

@@ -97,8 +97,11 @@ public:
 
 	bool Accept(ClientSocketTCP&);
 	virtual void OnReady();
+	int GetNextPlayerID();
+
 protected:
 	TCPsocket mServerSocket;
+	int mPlayerIDCounter;
 };
 
 class ClientSocketTCP : public TCPSocketBase
@@ -117,7 +120,10 @@ public:
 	bool Send(NetworkMessage &data, int indexToIgnore = -1);
 
 	virtual void OnReady();
+	void SetPlayerID(int id) { mPlayerID = id; }
+	int GetPlayerID() { return mPlayerID; }
 
 private:
 	ConnectionInfo mRemoteConnectionInfo;
+	int mPlayerID;
 };
