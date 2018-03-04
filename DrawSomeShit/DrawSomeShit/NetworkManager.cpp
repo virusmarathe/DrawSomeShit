@@ -40,7 +40,7 @@ int NetworkMessage::NumToUnload()
 {
 	if (mState == FULL)
 	{
-		return strlen(mBuffer) + 1;
+		return 4;// strlen(mBuffer) + 1;
 	}
 	return 0;
 }

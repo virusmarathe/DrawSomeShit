@@ -175,28 +175,23 @@ void Game::handleNetworkData()
 			{
 				char buf[256];
 				mMsg.UnLoadBytes(buf);
-//				std::cout << buf << std::endl;
-				char originalBuf[256];
-				strcpy_s(originalBuf, buf);
-				char * nextToken;
-				char separators[] = ",";
-				char * pch = strtok_s(buf, separators, &nextToken);
-				ObjectNetworkMessageType type = (ObjectNetworkMessageType)atoi(pch);
-				int x, y;
-				switch (type)
+
+				int packedData;
+				memcpy(&packedData, buf, sizeof(int));
+				ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
+				int x = (packedData & 0x000FFF00) >> 8;
+				int y = (packedData & 0xFFF00000) >> 20;
+
+				switch (type2)
 				{
 				case CREATE:
-					pch = strtok_s(NULL, separators, &nextToken);
-					x = atoi(pch);
-					pch = strtok_s(NULL, separators, &nextToken);
-					y = atoi(pch);
 					mNetworkedGameObjectList.push_back(new PencilObject(Vector2(x, y)));
 					break;
 				case UPDATE:
 				case FINISH:
 					if (mNetworkedGameObjectList.size() > 0)
 					{
-						mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(originalBuf);
+						mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(buf);
 					}
 					break;
 				}
@@ -224,9 +219,13 @@ void Game::handleEvents()
 			// for now mouse button is creating a pencil object, but what gets created should change based on selection, maybe a ObjectManager
 			mActiveGameObjectList.push_back(new PencilObject(Vector2(event.motion.x, event.motion.y)));
 			if (mConnected)
-			{
+			{			
 				charbuf buf;
-				sprintf_s(buf, "%d, %d, %d", ObjectNetworkMessageType::CREATE, event.motion.x, event.motion.y);
+				int packedData = 0;	// 32 bit data
+				packedData |= ObjectNetworkMessageType::CREATE; // 0-7 bits command/id
+				packedData |= event.motion.x << 8; 				// 8-19 bits x
+				packedData |= event.motion.y << 20;				// 20-31 bits y
+				memcpy(buf, &packedData, sizeof(int));
 				SendNetworkMessage(buf);
 			}
 			break;

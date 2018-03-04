@@ -82,17 +82,23 @@ void PencilObject::handleInput(SDL_Event event)
 			{
 				addPoints(Vector2((float)event.motion.x, (float)event.motion.y));
 				charbuf buf;
-				sprintf_s(buf, "%d, %d, %d", ObjectNetworkMessageType::UPDATE, event.motion.x, event.motion.y);
+				int packedData = 0;
+				packedData |= ObjectNetworkMessageType::UPDATE;
+				packedData |= event.motion.x << 8;
+				packedData |= event.motion.y << 20;
+				memcpy(buf, &packedData, sizeof(int));
 				Game::Instance()->SendNetworkMessage(buf);
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
+		{
 			mFinishedDrawing = true;
 			charbuf buf;
-			sprintf_s(buf, "%d", ObjectNetworkMessageType::FINISH);
+			int messageType = ObjectNetworkMessageType::FINISH;
+			memcpy(buf, &messageType, sizeof(int));
 			Game::Instance()->SendNetworkMessage(buf);
 			break;
-	
+		}
 		default:
 			break;
 	}
@@ -100,18 +106,15 @@ void PencilObject::handleInput(SDL_Event event)
 
 void PencilObject::HandleNetworkData(charbuf & buf)
 {
-	char * nextToken;
-	char separators[] = ",";
-	char * pch = strtok_s(buf, separators, &nextToken);
-	ObjectNetworkMessageType type = (ObjectNetworkMessageType)atoi(pch);
-	int x, y;
-	switch (type)
+	int packedData;
+	memcpy(&packedData, buf, sizeof(int));
+	ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);// = (ObjectNetworkMessageType)atoi(pch);
+	int x = (packedData & 0x000FFF00) >> 8;
+	int y = (packedData & 0xFFF00000) >> 20;
+
+	switch (type2)
 	{
 	case UPDATE:
-		pch = strtok_s(NULL, separators, &nextToken);
-		x = atoi(pch);
-		pch = strtok_s(NULL, separators, &nextToken);
-		y = atoi(pch);
 		addPoints(Vector2((float)x, (float)y));
 		break;
 	case FINISH:
