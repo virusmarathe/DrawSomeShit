@@ -169,37 +169,84 @@ void Game::handleNetworkData()
 	}
 	else
 	{
+		if (mConnectionType == ConnectionType::HOST)
+		{
+			if (mTCPListener->Accept(*mTCPClient))
+			{
+				mConnected = true;
+			}
+		}
+
 		if (mTCPClient->Ready())
 		{
-			if (mTCPClient->Recieve(mMsg))
+			if (mConnectionType == ConnectionType::HOST)
 			{
-				char buf[256];
-				mMsg.UnLoadBytes(buf);
-
-				int packedData;
-				memcpy(&packedData, buf, sizeof(int));
-				ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
-				int x = (packedData & 0x000FFF00) >> 8;
-				int y = (packedData & 0xFFF00000) >> 20;
-
-				switch (type2)
+				for (int i = 0; i < MAX_SOCKETS; i++)
 				{
-				case CREATE:
-					mNetworkedGameObjectList.push_back(new PencilObject(Vector2(x, y)));
-					break;
-				case UPDATE:
-				case FINISH:
-					if (mNetworkedGameObjectList.size() > 0)
+					if (mTCPClient->Recieve(mMsg, i))
 					{
-						mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(buf);
+						char buf[256];
+						mMsg.UnLoadBytes(buf);
+	 					SendNetworkMessage(buf);
+
+						int packedData;
+						memcpy(&packedData, buf, sizeof(int));
+						ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
+						int x = (packedData & 0x000FFF00) >> 8;
+						int y = (packedData & 0xFFF00000) >> 20;
+
+						switch (type2)
+						{
+						case CREATE:
+							mNetworkedGameObjectList.push_back(new PencilObject(Vector2(x, y)));
+							break;
+						case UPDATE:
+						case FINISH:
+							if (mNetworkedGameObjectList.size() > 0)
+							{
+								mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(buf);
+							}
+							break;
+						}
 					}
-					break;
-				}
+					else
+					{
+						//mConnected = false;
+					}
+				}				
 			}
-			else
+			else if (mConnectionType == ConnectionType::CLIENT)
 			{
-				mConnected = false;
-			}
+				if (mTCPClient->Recieve(mMsg, 0))
+				{
+					char buf[256];
+					mMsg.UnLoadBytes(buf);
+
+					int packedData;
+					memcpy(&packedData, buf, sizeof(int));
+					ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
+					int x = (packedData & 0x000FFF00) >> 8;
+					int y = (packedData & 0xFFF00000) >> 20;
+
+					switch (type2)
+					{
+					case CREATE:
+						mNetworkedGameObjectList.push_back(new PencilObject(Vector2(x, y)));
+						break;
+					case UPDATE:
+					case FINISH:
+						if (mNetworkedGameObjectList.size() > 0)
+						{
+							mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(buf);
+						}
+						break;
+					}
+				}
+				else
+				{
+					//mConnected = false;
+				}
+			}	
 		}
 	}
 }

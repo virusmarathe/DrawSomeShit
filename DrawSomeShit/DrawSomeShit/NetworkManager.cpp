@@ -118,34 +118,45 @@ bool ConnectionInfo::Valid() const
 
 TCPSocketBase::TCPSocketBase()
 {
-	mSocket = NULL;
-	mSet = SDLNet_AllocSocketSet(1);
+	for (int i = 0; i < MAX_SOCKETS; i++)
+	{
+		mSockets[i] = NULL;
+	}
+	mSet = SDLNet_AllocSocketSet(MAX_SOCKETS);
 }
 
 TCPSocketBase::~TCPSocketBase()
 {
-	if (mSocket != NULL)
+	for (int i = 0; i < MAX_SOCKETS; i++)
 	{
-		SDLNet_TCP_DelSocket(mSet, mSocket);
-		SDLNet_FreeSocketSet(mSet);
-		SDLNet_TCP_Close(mSocket);
+		if (mSockets[i] != NULL)
+		{
+			SDLNet_TCP_DelSocket(mSet, mSockets[i]);
+			SDLNet_TCP_Close(mSockets[i]);
+		}
 	}
+	SDLNet_FreeSocketSet(mSet);
 }
 
 void TCPSocketBase::SetSocket(TCPsocket socket)
 {
-	if (mSocket != NULL)
+	int socketIndex = 0;
+	// find next available socket
+	for (int i = 0; i < MAX_SOCKETS; i++)
 	{
-		SDLNet_TCP_DelSocket(mSet, mSocket); 
-		SDLNet_TCP_Close(mSocket);
+		if (mSockets[i] == NULL)
+		{
+			socketIndex = i;
+			break;
+		}
 	}
 
-	mSocket = socket;
+	mSockets[socketIndex] = socket;
 
-	if (SDLNet_TCP_AddSocket(mSet, mSocket) == -1)
+	if (SDLNet_TCP_AddSocket(mSet, mSockets[socketIndex]) == -1)
 	{
 		SDLNET_ERROR("SDLNet_TCP_AddSocket");
-		mSocket = NULL;
+		mSockets[socketIndex] = NULL;
 	}
 }
 
@@ -153,13 +164,17 @@ bool TCPSocketBase::Ready() const
 {
 	bool ready = false;
 	int numReady = SDLNet_CheckSockets(mSet, 0);
-	if (numReady == -1)
+	for (int i = 0; i < MAX_SOCKETS; i++)
 	{
-		SDLNET_ERROR("SDLNet_CheckSockets");
-	}
-	else if (numReady > 0)
-	{
-		ready = SDLNet_SocketReady(mSocket);
+		if (numReady == -1)
+		{
+			SDLNET_ERROR("SDLNet_CheckSockets");
+		}
+		else if (numReady > 0)
+		{
+			ready = true;  //SDLNet_SocketReady(mSockets[i]);
+			break;
+		}
 	}
 	return ready;
 }
@@ -175,8 +190,8 @@ HostSocketTCP::HostSocketTCP(ConnectionInfo * addressInfo)
 	TCPSocketBase::TCPSocketBase();
 	IPaddress ip = addressInfo->GetIP();
 
-	mSocket = SDLNet_TCP_Open(&ip);
-	if (mSocket == NULL)
+	mServerSocket = SDLNet_TCP_Open(&ip);
+	if (mServerSocket == NULL)
 	{
 		SDLNet_FreeSocketSet(mSet);
 		SDLNET_ERROR("SDLNet_TCP_Open");
@@ -188,14 +203,14 @@ HostSocketTCP::HostSocketTCP(Uint16 port)
 	ConnectionInfo listenerInfo(port);
 	if (!listenerInfo.Valid())
 	{
-		mSocket = NULL;
+		mServerSocket = NULL;
 	}
 	else
 	{
 		TCPSocketBase::TCPSocketBase();
 		IPaddress ip = listenerInfo.GetIP();
-		mSocket = SDLNet_TCP_Open(&ip);
-		if (mSocket == NULL)
+		mServerSocket = SDLNet_TCP_Open(&ip);
+		if (mServerSocket == NULL)
 		{
 			SDLNet_FreeSocketSet(mSet);
 			SDLNET_ERROR("SDLNet_TCP_Open");
@@ -205,7 +220,7 @@ HostSocketTCP::HostSocketTCP(Uint16 port)
 
 bool HostSocketTCP::Accept(ClientSocketTCP &clientSocket)
 {
-	TCPsocket sock = SDLNet_TCP_Accept(mSocket);
+	TCPsocket sock = SDLNet_TCP_Accept(mServerSocket);
 	if (sock != NULL)
 	{
 		clientSocket.SetSocket(sock);
@@ -230,7 +245,10 @@ ClientSocketTCP::ClientSocketTCP(const char * host, Uint16 port)
 	ConnectionInfo remoteInfo(host, port);
 	if (!remoteInfo.Valid())
 	{
-		mSocket = NULL;
+		for (int i = 0; i < MAX_SOCKETS; i++)
+		{
+			mSockets[i] = NULL;
+		}
 	}
 	else
 	{
@@ -263,7 +281,7 @@ bool ClientSocketTCP::Connect(HostSocketTCP & listenerSocket)
 void ClientSocketTCP::SetSocket(TCPsocket socket)
 {
 	TCPSocketBase::SetSocket(socket);
-	IPaddress * ips = SDLNet_TCP_GetPeerAddress(mSocket);
+	IPaddress * ips = SDLNet_TCP_GetPeerAddress(socket);
 	if (ips != NULL)
 	{
 		mRemoteConnectionInfo.SetIP(*ips);
@@ -277,43 +295,51 @@ void ClientSocketTCP::SetSocket(TCPsocket socket)
 	}
 }
 
-bool ClientSocketTCP::Recieve(NetworkMessage & data)
+bool ClientSocketTCP::Recieve(NetworkMessage & data, int index)
 {
-	if (mSocket == NULL) return false;
-
-	charbuf buf;
-
-	while (data.NumToLoad() > 0)
+	if (SDLNet_SocketReady(mSockets[index]))
 	{
-		if (SDLNet_TCP_Recv(mSocket, buf, data.NumToLoad()) > 0)
+		charbuf buf;
+
+		while (data.NumToLoad() > 0)
 		{
-			data.LoadBytes(buf, data.NumToLoad());
+			if (SDLNet_TCP_Recv(mSockets[index], buf, data.NumToLoad()) > 0)
+			{
+				data.LoadBytes(buf, data.NumToLoad());
+			}
+			else
+			{
+				return false;
+			}
 		}
-		else
-		{
-			return false;
-		}
+		data.Finish();
+
+		return true;
 	}
-
-	data.Finish();
-
-	return true;
+	else
+	{
+		return false;
+	}
 }
 
 bool ClientSocketTCP::Send(NetworkMessage & data)
 {
-	if (mSocket == NULL) return false;
-
 	charbuf buf;
 	int len;
 
 	while ((len = data.NumToUnload()) > 0)
 	{
 		data.UnLoadBytes(buf);
-		if (SDLNet_TCP_Send(mSocket, (void*)buf, len) < len)
+
+		for (int i = 0; i < MAX_SOCKETS; i++)
 		{
-			SDLNET_ERROR("SDLNet_TCP_Send");
-			return false;
+			if (mSockets[i] == NULL) continue;
+
+			if (SDLNet_TCP_Send(mSockets[i], (void*)buf, len) < len)
+			{
+				SDLNET_ERROR("SDLNet_TCP_Send");
+				return false;
+			}
 		}
 	}
 

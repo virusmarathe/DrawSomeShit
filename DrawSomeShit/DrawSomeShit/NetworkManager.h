@@ -3,6 +3,7 @@
 #include <iostream>
 
 typedef char charbuf[256];
+#define MAX_SOCKETS 8
 
 enum ConnectionType
 {
@@ -76,13 +77,13 @@ public:
 	virtual ~TCPSocketBase();
 
 	virtual void SetSocket(TCPsocket socket);
-	bool Valid() const { return mSocket != NULL; }
+	bool Valid() const { return true; }
 	bool Ready() const;
 
 	virtual void OnReady();
 
 protected:
-	TCPsocket mSocket;
+	TCPsocket mSockets[MAX_SOCKETS];
 	SDLNet_SocketSet mSet;
 };
 
@@ -96,6 +97,8 @@ public:
 
 	bool Accept(ClientSocketTCP&);
 	virtual void OnReady();
+protected:
+	TCPsocket mServerSocket;
 };
 
 class ClientSocketTCP : public TCPSocketBase
@@ -110,7 +113,7 @@ public:
 	void SetSocket(TCPsocket socket);
 	ConnectionInfo GetConnectionInfo() { return mRemoteConnectionInfo; }
 
-	bool Recieve(NetworkMessage &data);
+	bool Recieve(NetworkMessage &data, int index);
 	bool Send(NetworkMessage &data);
 
 	virtual void OnReady();
