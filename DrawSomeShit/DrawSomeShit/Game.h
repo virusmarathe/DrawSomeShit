@@ -35,7 +35,7 @@ public:
 	bool running() { return mIsRunning; }
 
 	void SendNetworkMessage(charbuf & dataBuf);
-	void ForwardMessageToClients(charbuf & dataBuf, int clientIndex);
+	void ForwardMessageToClients(charbuf & dataBuf, int clientIndex, int bufSize);
 
 private:
 	void setupOpenGL(int width, int height);

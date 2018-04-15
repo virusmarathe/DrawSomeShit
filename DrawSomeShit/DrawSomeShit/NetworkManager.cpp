@@ -24,6 +24,7 @@ void NetworkManager::Quit()
 
 NetworkMessage::NetworkMessage()
 {
+	mBufSize = 0;
 	Reset();
 }
 
@@ -31,7 +32,7 @@ int NetworkMessage::NumToLoad()
 {
 	if (mState == EMPTY)
 	{
-		return 255;
+		return 1024;
 	}
 	return 0;
 }
@@ -40,7 +41,7 @@ int NetworkMessage::NumToUnload()
 {
 	if (mState == FULL)
 	{
-		return 8;// strlen(mBuffer) + 1;
+		return mBufSize;// strlen(mBuffer) + 1;
 	}
 	return 0;
 }
@@ -52,15 +53,20 @@ void NetworkMessage::LoadBytes(charbuf & inputBuffer, int n)
 		mBuffer[i] = inputBuffer[i];
 	}
 	mState = READING;
+	mBufSize = n;
 }
 
-void NetworkMessage::UnLoadBytes(charbuf & destBuffer)
+int NetworkMessage::UnLoadBytes(charbuf & destBuffer)
 {
+	int bufSize = this->NumToUnload();
+
 	for (int i = 0; i < this->NumToUnload(); i++)
 	{
 		destBuffer[i] = mBuffer[i];
 	}
 	Reset();
+
+	return bufSize;
 }
 
 void NetworkMessage::Finish()
@@ -73,7 +79,7 @@ void NetworkMessage::Finish()
 
 void NetworkMessage::Reset()
 {
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < 1024; i++)
 	{
 		mBuffer[i] = 0;
 	}
@@ -310,12 +316,12 @@ bool ClientSocketTCP::Recieve(NetworkMessage & data, int index)
 	if (SDLNet_SocketReady(mSockets[index]))
 	{
 		charbuf buf;
-
 		while (data.NumToLoad() > 0)
 		{
-			if (SDLNet_TCP_Recv(mSockets[index], buf, data.NumToLoad()) > 0)
+			int numBytes = SDLNet_TCP_Recv(mSockets[index], buf, data.NumToLoad());
+			if (numBytes > 0)
 			{
-				data.LoadBytes(buf, data.NumToLoad());
+				data.LoadBytes(buf, numBytes);
 			}
 			else
 			{

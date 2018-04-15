@@ -2,7 +2,7 @@
 #include "SDL_net.h"
 #include <iostream>
 
-typedef char charbuf[256];
+typedef char charbuf[1024];
 #define MAX_SOCKETS 8
 
 enum ConnectionType
@@ -31,7 +31,7 @@ public:
 
 	void LoadBytes(charbuf& inputBuffer, int n);
 
-	void UnLoadBytes(charbuf& destBuffer);
+	int UnLoadBytes(charbuf& destBuffer);
 
 	void Finish();
 
@@ -49,7 +49,7 @@ protected:
 		FULL
 	};
 	BufferStates mState;
-
+	int mBufSize;
 };
 
 class ConnectionInfo
