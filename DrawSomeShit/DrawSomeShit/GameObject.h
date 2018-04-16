@@ -12,14 +12,15 @@ enum ObjectNetworkMessageType
 {
 	CREATE,
 	UPDATE,
-	FINISH
+	FINISH,
+	REMOVE
 };
 
 class GameObject
 {
 public:
 	GameObject();
-	GameObject(Vector2 startPos);
+	GameObject(Vector2 startPos, int objectID, int ownerID);
 	~GameObject();
 
 	virtual void update(float deltaTime) = 0;
@@ -35,8 +36,11 @@ public:
 	void SetID(int id) { mID = id; }
 	int GetID() { return mID; }
 
+	void SetOwner(int id) { mOwnerID = id; }
+
 protected:
 	Vector2 mPosition;
 	int mID;
+	int mOwnerID;
 };
 

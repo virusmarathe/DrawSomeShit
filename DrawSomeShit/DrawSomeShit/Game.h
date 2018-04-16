@@ -34,13 +34,16 @@ public:
 
 	bool running() { return mIsRunning; }
 
-	void SendNetworkMessage(charbuf & dataBuf);
+	void SendNetworkMessage(charbuf & dataBuf, int msgSize);
 	void ForwardMessageToClients(charbuf & dataBuf, int clientIndex, int bufSize);
+
+	int GetPlayerID() { return mPlayerID; }
 
 private:
 	void setupOpenGL(int width, int height);
 	void setupConnection();
 	void handleNetworkData();
+	void processCommandBuffer(charbuf buf, int bufSize);
 
 private:
 	static Game * sInstance;

@@ -79,9 +79,9 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 	mLastFrameTime = SDL_GetTicks();
 }
 
-void Game::SendNetworkMessage(charbuf & dataBuf)
+void Game::SendNetworkMessage(charbuf & dataBuf, int msgSize)
 {
-	mMsg.LoadBytes(dataBuf, 8);
+	mMsg.LoadBytes(dataBuf, msgSize);
 	mMsg.Finish();
 	mTCPClient->Send(mMsg);
 }
@@ -212,45 +212,7 @@ void Game::handleNetworkData()
 							char buf[1024];
 							int bufSize = mMsg.UnLoadBytes(buf);
 							ForwardMessageToClients(buf, i, bufSize);
-
-							int offset = 0;
-							while (offset < bufSize)
-							{
-								int id;
-								memcpy(&id, buf + offset, sizeof(int));
-								offset += sizeof(int);
-
-								int packedData;
-								memcpy(&packedData, buf + offset, sizeof(int));
-								ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
-								int x = (packedData & 0x000FFF00) >> 8;
-								int y = (packedData & 0xFFF00000) >> 20;
-
-								switch (type2)
-								{
-								case CREATE:
-								{
-									PencilObject * obj = new PencilObject(Vector2((float)x, (float)y));
-									obj->SetID(id);
-									std::cout << "Created object id " << obj->GetID() << std::endl;
-									mNetworkedGameObjectList.push_back(obj);
-									mNetworkedGameObjectMap[obj->GetID()] = obj;
-									break;
-								}
-								case UPDATE:
-								case FINISH:
-									if (mNetworkedGameObjectList.size() > 0)
-									{
-										//mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(packedData);
-										if (mNetworkedGameObjectMap[id] != NULL)
-										{
-											mNetworkedGameObjectMap[id]->HandleNetworkData(packedData);
-										}
-									}
-									break;
-								}
-								offset += sizeof(int);
-							}							
+							processCommandBuffer(buf, bufSize);
 						}
 						else
 						{
@@ -264,45 +226,7 @@ void Game::handleNetworkData()
 					{
 						char buf[1024];
 						int bufSize = mMsg.UnLoadBytes(buf);
-
-						int offset = 0;
-						while (offset < bufSize)
-						{
-							int id;
-							memcpy(&id, buf + offset, sizeof(int));
-							offset += sizeof(int);
-
-							int packedData;
-							memcpy(&packedData, buf + offset, sizeof(int));
-							ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
-							int x = (packedData & 0x000FFF00) >> 8;
-							int y = (packedData & 0xFFF00000) >> 20;
-
-							switch (type2)
-							{
-							case CREATE:
-							{
-								PencilObject * obj = new PencilObject(Vector2((float)x, (float)y));
-								obj->SetID(id);
-								std::cout << "Created object id " << obj->GetID() << std::endl;
-								mNetworkedGameObjectList.push_back(obj);
-								mNetworkedGameObjectMap[obj->GetID()] = obj;
-								break;
-							}
-							case UPDATE:
-							case FINISH:
-								if (mNetworkedGameObjectList.size() > 0)
-								{
-									if (mNetworkedGameObjectMap[id] != NULL)
-									{
-										//								mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(packedData);
-										mNetworkedGameObjectMap[id]->HandleNetworkData(packedData);
-									}
-								}
-								break;
-							}
-							offset += sizeof(int);
-						}						
+						processCommandBuffer(buf, bufSize);
 					}
 					else
 					{
@@ -311,6 +235,65 @@ void Game::handleNetworkData()
 				}
 			}			
 		}
+	}
+}
+
+void Game::processCommandBuffer(charbuf buf, int bufSize)
+{
+	int offset = 0;
+	while (offset < bufSize)
+	{
+		int idPackedData;
+		memcpy(&idPackedData, buf + offset, sizeof(int));
+		int playerID = (idPackedData & 0x000000FF);
+		int id = (idPackedData & 0xFFFFFF00) >> 8;
+		offset += sizeof(int);
+
+		int packedData;
+		memcpy(&packedData, buf + offset, sizeof(int));
+		ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
+		int x = (packedData & 0x000FFF00) >> 8;
+		int y = (packedData & 0xFFF00000) >> 20;
+
+		switch (type2)
+		{
+		case CREATE:
+		{
+			PencilObject * obj = new PencilObject(Vector2((float)x, (float)y), id, playerID);
+			std::cout << "Created object id " << obj->GetID() << std::endl;
+			mNetworkedGameObjectList.push_back(obj);
+			mNetworkedGameObjectMap[obj->GetID()] = obj;
+			break;
+		}
+		case UPDATE:
+		case FINISH:
+			if (mNetworkedGameObjectList.size() > 0)
+			{
+				//mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(packedData);
+				if (mNetworkedGameObjectMap[id] != NULL)
+				{
+					mNetworkedGameObjectMap[id]->HandleNetworkData(packedData);
+				}
+			}
+			break;
+		case REMOVE:
+			if (mNetworkedGameObjectMap[id] != NULL)
+			{
+				for (std::vector<GameObject *>::iterator it = mNetworkedGameObjectList.begin(); it != mNetworkedGameObjectList.end(); ++it)
+				{
+					if ((*it)->GetID() == id)
+					{
+						mNetworkedGameObjectList.erase(it);
+						break;
+					}
+				}
+				mNetworkedGameObjectMap.erase(id);
+				delete mNetworkedGameObjectMap[id];
+			}
+			break;
+		}
+
+		offset += sizeof(int);
 	}
 }
 
@@ -328,8 +311,7 @@ void Game::handleEvents()
 		case SDL_MOUSEBUTTONDOWN:
 		{
 			// for now mouse button is creating a pencil object, but what gets created should change based on selection, maybe a ObjectManager
-			PencilObject * obj = new PencilObject(Vector2((float)event.motion.x, (float)event.motion.y));
-			obj->SetID(mPlayerID * MAX_OBJECTS + mObjectIDCounter);
+			PencilObject * obj = new PencilObject(Vector2((float)event.motion.x, (float)event.motion.y), mPlayerID * MAX_OBJECTS + mObjectIDCounter, mPlayerID);
 			mActiveGameObjectList.push_back(obj);
 			mObjectIDCounter++;
 			if (mConnected)
@@ -337,8 +319,11 @@ void Game::handleEvents()
 				charbuf buf;
 				int offset = 0;
 
-				int id = obj->GetID();
-				memcpy(buf + offset, &id, sizeof(int));
+				int idPackedData = 0;
+				idPackedData |= mPlayerID;
+				idPackedData |= obj->GetID() << 8;
+				//int id = obj->GetID();
+				memcpy(buf + offset, &idPackedData, sizeof(int));
 				offset += sizeof(int);
 
 				int packedData = 0;	// 32 bit data
@@ -346,7 +331,7 @@ void Game::handleEvents()
 				packedData |= event.motion.x << 8; 				// 8-19 bits x
 				packedData |= event.motion.y << 20;				// 20-31 bits y
 				memcpy(buf + offset, &packedData, sizeof(int));
-				SendNetworkMessage(buf);
+				SendNetworkMessage(buf, 8);
 			}
 			break;
 		}
@@ -374,6 +359,22 @@ void Game::handleEvents()
 	{
 		if (mActiveGameObjectList.size() > 0)
 		{
+			charbuf buf;
+			int offset = 0;
+
+//			int id = mActiveGameObjectList.back()->GetID();
+			int idPackedData = 0;
+			idPackedData |= mPlayerID;
+			idPackedData |= mActiveGameObjectList.back()->GetID() << 8;
+
+			memcpy(buf + offset, &idPackedData, sizeof(int));
+			offset += sizeof(int);
+
+			int packedData = 0;
+			packedData |= ObjectNetworkMessageType::REMOVE;
+			memcpy(buf + offset, &packedData, sizeof(int));
+			Game::Instance()->SendNetworkMessage(buf, 8);
+
 			delete mActiveGameObjectList.back();
 			mActiveGameObjectList.pop_back();
 		}
@@ -415,12 +416,18 @@ void Game::render()
 
 	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
 	{
-		mActiveGameObjectList[i]->render();
+		if (mActiveGameObjectList[i] != NULL)
+		{
+			mActiveGameObjectList[i]->render();
+		}
 	}
 
 	for (size_t i = 0; i < mNetworkedGameObjectList.size(); i++)
 	{
-		mNetworkedGameObjectList[i]->render();
+		if (mNetworkedGameObjectList[i] != NULL)
+		{
+			mNetworkedGameObjectList[i]->render();
+		}
 	}
 
 	SDL_GL_SwapWindow(mWindow);
@@ -430,12 +437,18 @@ void Game::clean()
 {
 	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
 	{
-		delete mActiveGameObjectList[i];
+		if (mActiveGameObjectList[i] != NULL)
+		{
+			delete mActiveGameObjectList[i];
+		}
 	}
 
 	for (size_t i = 0; i < mNetworkedGameObjectList.size(); i++)
 	{
-		delete mNetworkedGameObjectList[i];
+		if (mNetworkedGameObjectList[i] != NULL)
+		{
+			delete mNetworkedGameObjectList[i];
+		}
 	}
 	
 	delete mTCPListener;

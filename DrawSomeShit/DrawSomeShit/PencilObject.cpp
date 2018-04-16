@@ -11,31 +11,33 @@ PencilObject::PencilObject()
 	mFinishedDrawing = false;
 }
 
-PencilObject::PencilObject(Vector2 startPos) : GameObject(startPos)
+PencilObject::PencilObject(Vector2 startPos, int objectID, int ownerID) : GameObject(startPos, objectID, ownerID)
 {
 	mTimer = 0.0f;
 	mColorValue = 0.0f;
 	addPoints(startPos);
 	mLastPointAddedPosition = Vector2(0, 0);
 	mFinishedDrawing = false;
+	SetColorByPlayerID();
 }
 
 
 PencilObject::~PencilObject()
 {
+
 }
 
 void PencilObject::update(float deltaTime)
 {
 	// dummy update logic for testing
-	float cycleDuration = 4.0f; // takes 4 seconds to fill the screen
+/*	float cycleDuration = 4.0f; // takes 4 seconds to fill the screen
 	mTimer += deltaTime;
 	if (mTimer > cycleDuration)
 	{
 		mTimer = mTimer - cycleDuration;
 	}
 
-	mColorValue = (2 * PI) * (mTimer / cycleDuration);
+	mColorValue = (2 * PI) * (mTimer / cycleDuration);*/
 }
 
 void PencilObject::render()
@@ -47,7 +49,7 @@ void PencilObject::render()
 	// move object to position, relavent for models, not so much for drawing
 	//glTranslatef(mPosition.X, mPosition.Y, 0.0f);
 
-	glColor3f(cos(mColorValue), sin(mColorValue), 0.7f);
+	glColor3f(mColor.r, mColor.g, mColor.b);
 
 	glBegin(GL_POINTS);
 	glVertex2f(mPosition.X, mPosition.Y);
@@ -71,6 +73,40 @@ void PencilObject::addPoints(Vector2 newPoint)
 	}
 }
 
+void PencilObject::SetColorByPlayerID()
+{
+	switch (mOwnerID)
+	{
+	case 0:
+		mColor.SetColor(1, 0, 0);
+		break;
+	case 1:
+		mColor.SetColor(0, 1, 0);
+		break;
+	case 2:
+		mColor.SetColor(0, 0, 1);
+		break;
+	case 3:
+		mColor.SetColor(1, 1, 0);
+		break;
+	case 4:
+		mColor.SetColor(0, 1, 1);
+		break;
+	case 5:
+		mColor.SetColor(1, 0, 1);
+		break;
+	case 6:
+		mColor.SetColor(1, 1, 1);
+		break;
+	case 7:
+		mColor.SetColor(0.4f, 1, .25f);
+		break;
+	default:
+		mColor.SetColor(1, 1, 1);
+		break;
+	}
+}
+
 void PencilObject::handleInput(SDL_Event event)
 {
 	if (mFinishedDrawing) return; // handling input for this object until mouse lifted
@@ -84,8 +120,12 @@ void PencilObject::handleInput(SDL_Event event)
 				charbuf buf;
 				int offset = 0;
 
-				int id = GetID();
-				memcpy(buf + offset, &id, sizeof(int));
+//				int id = GetID();
+				int idPackedData = 0;
+				idPackedData |= Game::Instance()->GetPlayerID();
+				idPackedData |= GetID() << 8;
+
+				memcpy(buf + offset, &idPackedData, sizeof(int));
 				offset += sizeof(int);
 
 				int packedData = 0;
@@ -93,7 +133,7 @@ void PencilObject::handleInput(SDL_Event event)
 				packedData |= event.motion.x << 8;
 				packedData |= event.motion.y << 20;
 				memcpy(buf + offset, &packedData, sizeof(int));
-				Game::Instance()->SendNetworkMessage(buf);
+				Game::Instance()->SendNetworkMessage(buf, 8);
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
@@ -102,13 +142,17 @@ void PencilObject::handleInput(SDL_Event event)
 			charbuf buf;
 			int offset = 0;
 
-			int id = GetID();
-			memcpy(buf + offset, &id, sizeof(int));
+//			int id = GetID();
+			int idPackedData = 0;
+			idPackedData |= Game::Instance()->GetPlayerID();
+			idPackedData |= GetID() << 8;
+
+			memcpy(buf + offset, &idPackedData, sizeof(int));
 			offset += sizeof(int);
 
 			int messageType = ObjectNetworkMessageType::FINISH;
 			memcpy(buf + offset, &messageType, sizeof(int));
-			Game::Instance()->SendNetworkMessage(buf);
+			Game::Instance()->SendNetworkMessage(buf, 8);
 			break;
 		}
 		default:

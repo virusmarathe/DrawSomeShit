@@ -2,11 +2,24 @@
 #include "GameObject.h"
 #include "Game.h"
 
+struct Color
+{
+	float r;
+	float g;
+	float b;
+
+	void SetColor(float r1, float g1, float b1) {
+		r = r1;
+		g = g1;
+		b = b1;
+	}
+};
+
 class PencilObject : public GameObject
 {
 public:
 	PencilObject();
-	PencilObject(Vector2 startPos);
+	PencilObject(Vector2 startPos, int objectID, int ownerID);
 	~PencilObject();
 
 	void update(float deltaTime);
@@ -19,6 +32,7 @@ public:
 
 private:
 	void addPoints(Vector2 newPoint);
+	void SetColorByPlayerID();
 
 private:
 	// very temporary variables, this is inteded to be a base class
@@ -29,5 +43,7 @@ private:
 
 	std::vector<Vector2> mPoints;
 	bool mFinishedDrawing;
+
+	Color mColor;
 };
 
