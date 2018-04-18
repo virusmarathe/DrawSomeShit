@@ -8,6 +8,8 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <IL/il.h>
+#include <IL/ilu.h>
 #include "PencilObject.h"
 #include "Vector2.h"
 #include "NetworkManager.h"

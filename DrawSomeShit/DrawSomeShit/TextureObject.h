@@ -1,5 +1,7 @@
 #pragma once
 #include "GameObject.h"
+#include <IL/il.h>
+
 class TextureObject : public GameObject
 {
 public:
@@ -8,6 +10,7 @@ public:
 	virtual ~TextureObject();
 
 	bool loadTextureFromPixels32(GLuint * pixels, GLuint width, GLuint height);
+	bool loadTextureFromFile(std::string path);
 
 	void freeTexture();
 

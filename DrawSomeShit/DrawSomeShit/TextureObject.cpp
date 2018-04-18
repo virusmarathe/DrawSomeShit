@@ -46,6 +46,35 @@ bool TextureObject::loadTextureFromPixels32(GLuint * pixels, GLuint width, GLuin
 	return true;
 }
 
+bool TextureObject::loadTextureFromFile(std::string path)
+{
+	bool textureLoaded = false;
+
+	ILuint imgID = 0;
+	ilGenImages(1, &imgID);
+	ilBindImage(imgID);
+
+	ILboolean success = ilLoadImage(path.c_str());
+
+	if (success == IL_TRUE)
+	{
+		success = ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+		if (success == IL_TRUE)
+		{
+			textureLoaded = loadTextureFromPixels32((GLuint*)ilGetData(), (GLuint)ilGetInteger(IL_IMAGE_WIDTH), (GLuint)ilGetInteger(IL_IMAGE_HEIGHT));
+		}
+
+		ilDeleteImages(1, &imgID);
+	}
+
+	if (!textureLoaded)
+	{
+		std::cout << "Unable to load " << path.c_str() << "!";
+	}
+
+	return textureLoaded;
+}
+
 void TextureObject::freeTexture()
 {
 	if (mTextureID != 0)
@@ -76,9 +105,9 @@ void TextureObject::render()
 		//Render textured quad
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.f, 0.f); glVertex2f(0.f, 0.f);
-		glTexCoord2f(1.f, 0.f); glVertex2f(mTextureWidth, 0.f);
-		glTexCoord2f(1.f, 1.f); glVertex2f(mTextureWidth, mTextureHeight);
-		glTexCoord2f(0.f, 1.f); glVertex2f(0.f, mTextureHeight);
+		glTexCoord2f(1.f, 0.f); glVertex2f((GLfloat)mTextureWidth, 0.f);
+		glTexCoord2f(1.f, 1.f); glVertex2f((GLfloat)mTextureWidth, (GLfloat)mTextureHeight);
+		glTexCoord2f(0.f, 1.f); glVertex2f(0.f, (GLfloat)mTextureHeight);
 		glEnd();
 	}
 }

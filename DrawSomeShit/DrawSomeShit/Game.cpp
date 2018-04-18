@@ -109,45 +109,18 @@ void Game::setupOpenGL(int width, int height)
 
 	// enable texturing
 	glEnable(GL_TEXTURE_2D);
+
+	// initialize DevIL
+	ilInit();
+	ilClearColor(255, 255, 255, 000);
 }
 
 void Game::loadMedia()
 {
 	mTestObject = new TextureObject(Vector2(200, 200), -1, -1);
 
-	//Checkerboard pixels
-	const int CHECKERBOARD_WIDTH = 128;
-	const int CHECKERBOARD_HEIGHT = 128;
-	const int CHECKERBOARD_PIXEL_COUNT = CHECKERBOARD_WIDTH * CHECKERBOARD_HEIGHT;
-	GLuint checkerBoard[CHECKERBOARD_PIXEL_COUNT];
-
-	//Go through pixels
-	for (int i = 0; i < CHECKERBOARD_PIXEL_COUNT; ++i)
-	{
-		//Get the individual color components
-		GLubyte* colors = (GLubyte*)&checkerBoard[i];
-
-		//If the 5th bit of the x and y offsets of the pixel do not match
-		if (i / 128 & 16 ^ i % 128 & 16)
-		{
-			//Set pixel to white
-			colors[0] = 0xFF;
-			colors[1] = 0xFF;
-			colors[2] = 0xFF;
-			colors[3] = 0xFF;
-		}
-		else
-		{
-			//Set pixel to red
-			colors[0] = 0xFF;
-			colors[1] = 0x00;
-			colors[2] = 0x00;
-			colors[3] = 0xFF;
-		}
-	}
-
 	//Load texture
-	if (!mTestObject->loadTextureFromPixels32(checkerBoard, CHECKERBOARD_WIDTH, CHECKERBOARD_HEIGHT))
+	if (!mTestObject->loadTextureFromFile("Assets/texture.png"))
 	{
 		printf("Unable to load checkerboard texture!\n");
 	}
