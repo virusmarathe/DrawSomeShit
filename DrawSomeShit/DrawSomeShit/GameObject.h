@@ -21,7 +21,7 @@ class GameObject
 public:
 	GameObject();
 	GameObject(Vector2 startPos, int objectID, int ownerID);
-	~GameObject();
+	virtual ~GameObject();
 
 	virtual void update(float deltaTime) = 0;
 

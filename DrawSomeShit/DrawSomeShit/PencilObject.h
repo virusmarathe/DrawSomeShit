@@ -20,7 +20,7 @@ class PencilObject : public GameObject
 public:
 	PencilObject();
 	PencilObject(Vector2 startPos, int objectID, int ownerID);
-	~PencilObject();
+	virtual ~PencilObject();
 
 	void update(float deltaTime);
 

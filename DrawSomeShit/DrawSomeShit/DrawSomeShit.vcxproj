@@ -24,6 +24,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="PencilObject.cpp" />
+    <ClCompile Include="TextureObject.cpp" />
     <ClCompile Include="Vector2.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +33,7 @@
     <ClInclude Include="NetworkManager.h" />
     <ClInclude Include="PencilObject.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="TextureObject.h" />
     <ClInclude Include="Vector2.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

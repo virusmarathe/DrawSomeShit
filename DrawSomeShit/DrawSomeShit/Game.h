@@ -11,6 +11,7 @@
 #include "PencilObject.h"
 #include "Vector2.h"
 #include "NetworkManager.h"
+#include "TextureObject.h"
 
 class Game
 {
@@ -41,6 +42,7 @@ public:
 
 private:
 	void setupOpenGL(int width, int height);
+	void loadMedia();
 	void setupConnection();
 	void handleNetworkData();
 	void processCommandBuffer(charbuf buf, int bufSize);
@@ -65,6 +67,7 @@ private:
 	ConnectionInfo * mRemoteIP;
 	NetworkMessage mMsg;
 	HostSocketTCP * mTCPListener;
+	TextureObject * mTestObject;
 
 	std::vector<GameObject *> mNetworkedGameObjectList;
 	std::map<int, GameObject*> mNetworkedGameObjectMap;
