@@ -4,6 +4,7 @@
 #define MAX_OBJECTS 10000
 
 Game * Game::sInstance = NULL;
+Rect gTestClipRect;
 
 Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 {
@@ -117,7 +118,12 @@ void Game::setupOpenGL(int width, int height)
 
 void Game::loadMedia()
 {
-	mTestObject = new TextureObject(Vector2(200, 200), -1, -1);
+	gTestClipRect.x = 0.0f;
+	gTestClipRect.y = 128.0f;
+	gTestClipRect.w = 128.0f;
+	gTestClipRect.h = 128.0f;
+
+	mTestObject = new TextureObject(Vector2(200, 200), &gTestClipRect, -1, -1);
 
 	//Load texture
 	if (!mTestObject->loadTextureFromFile("Assets/texture.png"))

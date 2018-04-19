@@ -2,11 +2,19 @@
 #include "GameObject.h"
 #include <IL/il.h>
 
+struct Rect
+{
+	GLfloat x;
+	GLfloat y;
+	GLfloat w;
+	GLfloat h;
+};
+
 class TextureObject : public GameObject
 {
 public:
 	TextureObject();
-	TextureObject(Vector2 startPos, int objectID, int ownerID);
+	TextureObject(Vector2 startPos, Rect * clipRect, int objectID, int ownerID);
 	virtual ~TextureObject();
 
 	bool loadTextureFromPixels32(GLuint * pixels, GLuint width, GLuint height);
@@ -29,5 +37,6 @@ private:
 	GLuint mTextureID;
 	GLuint mTextureWidth;
 	GLuint mTextureHeight;
+	Rect * mClipRect;
 };
 

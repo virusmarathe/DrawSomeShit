@@ -7,11 +7,12 @@ TextureObject::TextureObject()
 	mTextureHeight = 0;
 }
 
-TextureObject::TextureObject(Vector2 startPos, int objectID, int ownerID) :GameObject(startPos, objectID, ownerID)
+TextureObject::TextureObject(Vector2 startPos, Rect * clipRect, int objectID, int ownerID) :GameObject(startPos, objectID, ownerID)
 {
 	mTextureID = 0;
 	mTextureWidth = 0;
 	mTextureHeight = 0;
+	mClipRect = clipRect;
 }
 
 
@@ -95,6 +96,25 @@ void TextureObject::render()
 		//Remove any previous transformations
 		glLoadIdentity();
 
+		GLfloat texTop = 0.0f;
+		GLfloat texBottom = 1.0f;
+		GLfloat texLeft = 0.0f;
+		GLfloat texRight = 1.0f;
+		GLfloat clipWidth = (GLfloat)mTextureWidth;
+		GLfloat clipHeight = (GLfloat)mTextureHeight;
+
+		// set values based on clip
+		if (mClipRect != NULL)
+		{
+			texLeft = mClipRect->x / mTextureWidth;
+			texRight = (mClipRect->x + mClipRect->w) / mTextureWidth;
+			texTop = mClipRect->y / mTextureHeight;
+			texBottom = (mClipRect->y + mClipRect->h) / mTextureHeight;
+
+			clipWidth = mClipRect->w;
+			clipHeight = mClipRect->h;
+		}
+
 		//Move to rendering point
 		glTranslatef(mPosition.X, mPosition.Y, 0.f);
 
@@ -104,10 +124,10 @@ void TextureObject::render()
 
 		//Render textured quad
 		glBegin(GL_QUADS);
-		glTexCoord2f(0.f, 0.f); glVertex2f(0.f, 0.f);
-		glTexCoord2f(1.f, 0.f); glVertex2f((GLfloat)mTextureWidth, 0.f);
-		glTexCoord2f(1.f, 1.f); glVertex2f((GLfloat)mTextureWidth, (GLfloat)mTextureHeight);
-		glTexCoord2f(0.f, 1.f); glVertex2f(0.f, (GLfloat)mTextureHeight);
+		glTexCoord2f(texLeft, texTop); glVertex2f(0.0f, 0.0f);
+		glTexCoord2f(texRight, texTop); glVertex2f(clipWidth, 0.0f);
+		glTexCoord2f(texRight, texBottom); glVertex2f(clipWidth, clipHeight);
+		glTexCoord2f(texLeft, texBottom); glVertex2f(0.0f, clipHeight);
 		glEnd();
 	}
 }
