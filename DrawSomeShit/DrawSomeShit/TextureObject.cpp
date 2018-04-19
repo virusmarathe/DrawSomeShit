@@ -24,6 +24,8 @@ TextureObject::TextureObject(Vector2 startPos, Rect * clipRect, int objectID, in
 TextureObject::~TextureObject()
 {
 	freeTexture();
+
+	freeVBO();
 }
 
 bool TextureObject::loadTextureFromPixels32(GLuint * pixels, GLuint width, GLuint height)
@@ -48,6 +50,8 @@ bool TextureObject::loadTextureFromPixels32(GLuint * pixels, GLuint width, GLuin
 		printf("Error loading texture from %p pixels! %s\n", pixels, gluErrorString(error));
 		return false;
 	}
+
+	initVBO();
 
 	return true;
 }
@@ -122,18 +126,39 @@ void TextureObject::render()
 
 		//Move to rendering point
 		glTranslatef(mPosition.X, mPosition.Y, 0.f);
-
 		glColor3f(1, 1, 1);
+
+		VertexData2D vData[4];
+		vData[0].texCoord.s = texLeft;	vData[0].texCoord.t = texTop;
+		vData[1].texCoord.s = texRight; vData[1].texCoord.t = texTop;
+		vData[2].texCoord.s = texRight; vData[2].texCoord.t = texBottom;
+		vData[3].texCoord.s = texLeft;	vData[3].texCoord.t = texBottom;
+
+		vData[0].position.x = 0.0f;			vData[0].position.y = 0.0f;
+		vData[1].position.x = clipWidth;	vData[1].position.y = 0.0f;
+		vData[2].position.x = clipWidth;	vData[2].position.y = clipHeight;
+		vData[3].position.x = 0.0f;			vData[3].position.y = clipHeight;
+
 		//Set texture ID
 		glBindTexture(GL_TEXTURE_2D, mTextureID);
 
-		//Render textured quad
-		glBegin(GL_QUADS);
-		glTexCoord2f(texLeft, texTop); glVertex2f(0.0f, 0.0f);
-		glTexCoord2f(texRight, texTop); glVertex2f(clipWidth, 0.0f);
-		glTexCoord2f(texRight, texBottom); glVertex2f(clipWidth, clipHeight);
-		glTexCoord2f(texLeft, texBottom); glVertex2f(0.0f, clipHeight);
-		glEnd();
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+			// bind and update vbo data
+			glBindBuffer(GL_ARRAY_BUFFER, mVBOID);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(VertexData2D), vData);
+			// set texture data
+			glTexCoordPointer(2, GL_FLOAT, sizeof(VertexData2D), (GLvoid*)offsetof(VertexData2D, texCoord));
+			// set vertex data
+			glVertexPointer(2, GL_FLOAT, sizeof(VertexData2D), (GLvoid*)offsetof(VertexData2D, position));
+
+			// bind IBO
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBOID);
+			glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }
 
@@ -162,4 +187,9 @@ void TextureObject::initVBO()
 
 void TextureObject::freeVBO()
 {
+	if (mVBOID != 0)
+	{
+		glDeleteBuffers(1, &mVBOID);
+		glDeleteBuffers(1, &mIBOID);
+	}
 }

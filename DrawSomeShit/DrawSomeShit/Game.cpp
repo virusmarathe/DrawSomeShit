@@ -125,6 +125,11 @@ void Game::setupOpenGL(int width, int height)
 	// enable texturing
 	glEnable(GL_TEXTURE_2D);
 
+	//Set blending
+	glEnable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	// initialize DevIL
 	ilInit();
 	ilClearColor(255, 255, 255, 000);
