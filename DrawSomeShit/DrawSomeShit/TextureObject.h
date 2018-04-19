@@ -1,6 +1,7 @@
 #pragma once
 #include "GameObject.h"
 #include <IL/il.h>
+#include "VertexData.h"
 
 struct Rect
 {
@@ -33,10 +34,18 @@ public:
 	GLuint getTextureHeight() { return mTextureHeight; }
 
 private:
+	void initVBO();
+	void freeVBO();
+
+private:
 
 	GLuint mTextureID;
 	GLuint mTextureWidth;
 	GLuint mTextureHeight;
 	Rect * mClipRect;
+	
+	// VBO IDs
+	GLuint mVBOID;
+	GLuint mIBOID;
 };
 

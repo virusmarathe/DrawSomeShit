@@ -97,6 +97,20 @@ void Game::ForwardMessageToClients(charbuf & dataBuf, int clientIndex, int bufSi
 
 void Game::setupOpenGL(int width, int height)
 {
+	// initialize GLEW
+	GLenum glewError = glewInit();
+	if (glewError != GLEW_OK)
+	{
+		std::cout << "Error initializing GLEW! " << glewGetErrorString(glewError) << std::endl;
+		return;
+	}
+
+	if (!GLEW_VERSION_2_1)
+	{
+		std::cout << "OpenGL 2.1 not supported!" << std::endl;
+		return;
+	}
+
 	// clear out projection matrix
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

@@ -5,6 +5,9 @@ TextureObject::TextureObject()
 	mTextureID = 0;
 	mTextureWidth = 0;
 	mTextureHeight = 0;
+	mClipRect = NULL;
+	mVBOID = 0;
+	mIBOID = 0;
 }
 
 TextureObject::TextureObject(Vector2 startPos, Rect * clipRect, int objectID, int ownerID) :GameObject(startPos, objectID, ownerID)
@@ -13,6 +16,8 @@ TextureObject::TextureObject(Vector2 startPos, Rect * clipRect, int objectID, in
 	mTextureWidth = 0;
 	mTextureHeight = 0;
 	mClipRect = clipRect;
+	mVBOID = 0;
+	mIBOID = 0;
 }
 
 
@@ -130,4 +135,31 @@ void TextureObject::render()
 		glTexCoord2f(texLeft, texBottom); glVertex2f(0.0f, clipHeight);
 		glEnd();
 	}
+}
+
+void TextureObject::initVBO()
+{
+	if (mTextureID != 0 && mVBOID == 0)
+	{
+		VertexData2D vData[4];
+		GLuint iData[4] = { 0, 1, 2, 3 };
+
+		// create VBO
+		glGenBuffers(1, &mVBOID);
+		glBindBuffer(GL_ARRAY_BUFFER, mVBOID);
+		glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(VertexData2D), vData, GL_DYNAMIC_DRAW);
+
+		// create IBO
+		glGenBuffers(1, &mIBOID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBOID);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLuint), iData, GL_DYNAMIC_DRAW);
+
+		// unbind buffers
+		glBindBuffer(GL_ARRAY_BUFFER, NULL);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);
+	}
+}
+
+void TextureObject::freeVBO()
+{
 }
