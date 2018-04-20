@@ -165,7 +165,7 @@ void Game::loadMedia()
 		std::cout << "Unable to clip sprite sheet!" << std::endl;
 	}
 
-	mTestSpriteObject = new SpriteObject(Vector2(100, 100), mTestSpriteSheet->getTextureID(), mTestSpriteSheet->getVertexDataBuffer(), mTestSpriteSheet->getIndexBufferAtIndex(4));
+	mTestSpriteObject = new SpriteObject(Vector2(100, 100), mTestSpriteSheet->getTextureID(), mTestSpriteSheet->getVertexDataBuffer(), mTestSpriteSheet->getIndexBufferAtIndex(0));
 }
 
 void Game::setupConnection()
