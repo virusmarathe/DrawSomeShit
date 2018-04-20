@@ -16,6 +16,8 @@
 #include "Vector2.h"
 #include "NetworkManager.h"
 #include "TextureObject.h"
+#include "SpriteSheet.h";
+#include "SpriteObject.h"
 
 class Game
 {
@@ -71,7 +73,9 @@ private:
 	ConnectionInfo * mRemoteIP;
 	NetworkMessage mMsg;
 	HostSocketTCP * mTCPListener;
-	TextureObject * mTestObject;
+
+	SpriteSheet * mTestSpriteSheet;
+	SpriteObject * mTestSpriteObject;
 
 	std::vector<GameObject *> mNetworkedGameObjectList;
 	std::map<int, GameObject*> mNetworkedGameObjectMap;

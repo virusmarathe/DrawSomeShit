@@ -21,7 +21,7 @@ public:
 	bool loadTextureFromPixels32(GLuint * pixels, GLuint width, GLuint height);
 	bool loadTextureFromFile(std::string path);
 
-	void freeTexture();
+	virtual void freeTexture();
 
 	virtual void render();
 

@@ -4,7 +4,6 @@
 #define MAX_OBJECTS 10000
 
 Game * Game::sInstance = NULL;
-Rect gTestClipRect;
 
 Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 {
@@ -29,6 +28,8 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mConnectionType = ConnectionType::NONE;
 	mPlayerID = -1;
 	mObjectIDCounter = 0;
+	mTestSpriteSheet = NULL;
+	mTestSpriteObject = NULL;
 }
 
 
@@ -137,18 +138,34 @@ void Game::setupOpenGL(int width, int height)
 
 void Game::loadMedia()
 {
-	gTestClipRect.x = 0.0f;
-	gTestClipRect.y = 128.0f;
-	gTestClipRect.w = 128.0f;
-	gTestClipRect.h = 128.0f;
-
-	mTestObject = new TextureObject(Vector2(200, 200), &gTestClipRect, -1, -1);
+	mTestSpriteSheet = new SpriteSheet();
 
 	//Load texture
-	if (!mTestObject->loadTextureFromFile("Assets/texture.png"))
+	if (!mTestSpriteSheet->loadTextureFromFile("Assets/texture.png"))
 	{
-		printf("Unable to load checkerboard texture!\n");
+		printf("Unable to load spritesheet texture!\n");
 	}
+
+	Rect clip = { 0.0f, 0.0f, 128.0f, 128.0f };
+	clip.x = 0.0f;
+	clip.y = 0.0f;
+	mTestSpriteSheet->addClipSprite(clip);
+	clip.x = 128.0f;
+	clip.y = 0.0f;
+	mTestSpriteSheet->addClipSprite(clip);
+	clip.x = 128.0f;
+	clip.y = 128.0f;
+	mTestSpriteSheet->addClipSprite(clip);
+	clip.x = 0.0f;
+	clip.y = 128.0f;
+	mTestSpriteSheet->addClipSprite(clip);
+
+	if (!mTestSpriteSheet->generateDataBuffer())
+	{
+		std::cout << "Unable to clip sprite sheet!" << std::endl;
+	}
+
+	mTestSpriteObject = new SpriteObject(Vector2(100, 100), mTestSpriteSheet->getTextureID(), mTestSpriteSheet->getVertexDataBuffer(), mTestSpriteSheet->getIndexBufferAtIndex(4));
 }
 
 void Game::setupConnection()
@@ -474,14 +491,15 @@ void Game::render()
 		}
 	}
 
-	mTestObject->render();
+	mTestSpriteObject->render();
 
 	SDL_GL_SwapWindow(mWindow);
 }
 
 void Game::clean()
 {
-	delete mTestObject;
+	delete mTestSpriteObject;
+	delete mTestSpriteSheet;
 
 	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
 	{
