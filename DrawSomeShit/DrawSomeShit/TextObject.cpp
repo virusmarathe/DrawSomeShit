@@ -35,12 +35,13 @@ void TextObject::render()
 {
 	GLfloat drawX = mPosition.X;
 	GLfloat drawY = mPosition.Y;
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
 	if (mTextureID != 0)
 	{
-		glTranslatef(mPosition.X, mPosition.Y, 0.0f);
+		glTranslatef(mPosition.X, mPosition.Y, 1.0f);
 		glColor3f(1, 1, 1);
 
 		glBindTexture(GL_TEXTURE_2D, mTextureID);

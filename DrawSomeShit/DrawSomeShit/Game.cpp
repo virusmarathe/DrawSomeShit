@@ -126,9 +126,11 @@ void Game::setupOpenGL(int width, int height)
 	glEnable(GL_TEXTURE_2D);
 
 	//Set blending
-	glEnable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_ALPHA_TEST);
+	glAlphaFunc(GL_NOTEQUAL, 0.0);
 
 	// initialize DevIL
 	ilInit();
@@ -452,7 +454,7 @@ void Game::update()
 void Game::render()
 {
 	// clear color buffer
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
 	{

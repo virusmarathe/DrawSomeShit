@@ -6,7 +6,7 @@ int main(int argc, char * argv[])
 {
 	mGame = new Game();
 	
-	mGame->init("Draw Some Shit!", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, false);
+	mGame->init("Draw Some Shit!", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 900, false);
 
 	// game loop
 	while (mGame->running())
