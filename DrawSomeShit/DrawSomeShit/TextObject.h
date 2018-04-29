@@ -14,6 +14,9 @@ public:
 
 	void handleInput(SDL_Event event);
 
+	std::string getText() { return mText; }
+	void setText(std::string text) { mText = text; }
+
 private:
 	FontSheet * mFontSheetRef;
 	std::string mText;
@@ -22,6 +25,6 @@ private:
 	GLfloat mSpace;
 	GLfloat mNewLine;
 	std::vector<Rect> mClips;
-	float mTimer;
+	bool mIsSent;
 };
 

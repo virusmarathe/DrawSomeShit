@@ -61,9 +61,12 @@ private:
 	SDL_GLContext mContext;
 	Uint32 mLastFrameTime;
 	bool mIsMouseDown;
+	int mScreenWidth;
+	int mScreenHeight;
 
 	// need switch this to an object pool so you don't create every object at runtime
 	std::vector<GameObject*> mActiveGameObjectList;
+	std::vector<TextObject*> mTextObjects;
 	bool keysPressed[SDL_NUM_SCANCODES];
 
 	// networking variables
@@ -75,10 +78,13 @@ private:
 	HostSocketTCP * mTCPListener;
 
 	FontSheet * mTestFontSheet;
+	TextObject * mLastTextObject;
 
 	std::vector<GameObject *> mNetworkedGameObjectList;
 	std::map<int, GameObject*> mNetworkedGameObjectMap;
 	int mPlayerID;
 	int mObjectIDCounter;
+
+	bool mEnterWasPressed = true;
 };
 

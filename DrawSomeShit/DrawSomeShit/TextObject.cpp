@@ -1,6 +1,6 @@
 #include "TextObject.h"
 
-
+const int MAX_TEXT_LENGTH = 128;
 
 TextObject::TextObject(Vector2 pos, FontSheet * fontSheetRef, std::string text)
 {
@@ -12,7 +12,7 @@ TextObject::TextObject(Vector2 pos, FontSheet * fontSheetRef, std::string text)
 	mNewLine = mFontSheetRef->getNewLine();
 	mTextureID = mFontSheetRef->getTextureID();
 	mClips = mFontSheetRef->getClipsRef();
-	mTimer = 0.0f;
+	mIsSent = false;
 }
 
 
@@ -23,12 +23,6 @@ TextObject::~TextObject()
 
 void TextObject::update(float deltaTime)
 {
-	mTimer += deltaTime;
-
-	if (mTimer > 10.0f)
-	{
-		mText = "Huuto is the worst!";
-	}
 }
 
 void TextObject::render()
@@ -42,7 +36,12 @@ void TextObject::render()
 	if (mTextureID != 0)
 	{
 		glTranslatef(mPosition.X, mPosition.Y, 1.0f);
+		glScalef(0.5f, 0.5f, 0.5f);
 		glColor3f(1, 1, 1);
+		if (mIsSent)
+		{
+			glColor3f(1, 0, 0);
+		}
 
 		glBindTexture(GL_TEXTURE_2D, mTextureID);
 		
@@ -87,4 +86,27 @@ void TextObject::render()
 
 void TextObject::handleInput(SDL_Event event)
 {
+	switch (event.type)
+	{
+	case SDL_TEXTINPUT:
+		if (!mIsSent && mText.size() < MAX_TEXT_LENGTH)
+		{
+			mText += event.text.text;
+		}
+		break;
+	case SDL_KEYDOWN:
+		if (event.key.keysym.scancode == SDL_SCANCODE_RETURN)
+		{
+			mIsSent = true;
+			mPosition.Y -= (mNewLine / 1.5f);
+		}
+		else if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE)
+		{
+			if (!mIsSent && mText.length() > 0)
+			{
+				mText.pop_back();
+			}
+		}
+		break;
+	}
 }

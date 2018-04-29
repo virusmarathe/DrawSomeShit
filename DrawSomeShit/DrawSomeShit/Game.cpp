@@ -29,6 +29,7 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mPlayerID = -1;
 	mObjectIDCounter = 0;
 	mTestFontSheet = NULL;
+	mLastTextObject = NULL;
 }
 
 
@@ -49,6 +50,8 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 	}
 	std::cout << "SDL subsystem initialized..." << std::endl;
 	mIsRunning = true;
+	mScreenWidth = width;
+	mScreenHeight = height;
 
 	NetworkManager::Init();
 	setupConnection();
@@ -76,6 +79,8 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 		std::cout << "Failed to create openGL renderer!" << std::endl;
 		return;
 	}
+
+	SDL_StartTextInput();
 	setupOpenGL(width, height);
 	mLastFrameTime = SDL_GetTicks();
 	loadMedia();
@@ -146,7 +151,8 @@ void Game::loadMedia()
 		std::cout << "Failed to load font sheet!" << std::endl;
 	}
 
-	mActiveGameObjectList.push_back(new TextObject(Vector2(100, 100), mTestFontSheet, "Huuto is the best!"));
+	mLastTextObject = new TextObject(Vector2(100, mScreenHeight - 100), mTestFontSheet, "Huuto is the best!");
+	mTextObjects.push_back(mLastTextObject);
 }
 
 void Game::setupConnection()
@@ -383,7 +389,6 @@ void Game::handleEvents()
 		case SDL_KEYUP:
 			keysPressed[event.key.keysym.scancode] = false;
 			break;
-
 		default:
 			break;
 		}
@@ -393,6 +398,10 @@ void Game::handleEvents()
 		if (mActiveGameObjectList.size() > 0)
 		{
 			mActiveGameObjectList[mActiveGameObjectList.size() - 1]->handleInput(event);
+		}
+		for (int i = 0; i < mTextObjects.size(); i++)
+		{
+			mTextObjects[i]->handleInput(event);
 		}
 	}
 
@@ -421,7 +430,24 @@ void Game::handleEvents()
 			mActiveGameObjectList.pop_back();
 		}
 		keysPressed[SDL_SCANCODE_Z] = false;
-	}	
+	}
+
+	// typing
+	if (keysPressed[SDL_SCANCODE_RETURN] && !mEnterWasPressed)
+	{
+		mEnterWasPressed = true;
+		mLastTextObject = new TextObject(Vector2(100, mScreenHeight - 100), mTestFontSheet, "");
+		mTextObjects.push_back(mLastTextObject);
+		if (mTextObjects.size() > 10)
+		{
+			delete mTextObjects.front();
+			mTextObjects.erase(mTextObjects.begin());
+		}
+	}
+	else if (!keysPressed[SDL_SCANCODE_RETURN] && mEnterWasPressed)
+	{
+		mEnterWasPressed = false;
+	}
 }
 
 void Game::update()
@@ -447,7 +473,6 @@ void Game::update()
 		}
 	}
 
-
 	mLastFrameTime = currentFrameTime;
 }
 
@@ -469,6 +494,14 @@ void Game::render()
 		if (mNetworkedGameObjectList[i] != NULL)
 		{
 			mNetworkedGameObjectList[i]->render();
+		}
+	}
+
+	for (size_t i = 0; i < mTextObjects.size(); i++)
+	{
+		if (mTextObjects[i] != NULL)
+		{
+			mTextObjects[i]->render();
 		}
 	}
 
@@ -494,6 +527,15 @@ void Game::clean()
 			delete mNetworkedGameObjectList[i];
 		}
 	}
+
+	for (size_t i = 0; i < mTextObjects.size(); i++)
+	{
+		if (mTextObjects[i] != NULL)
+		{
+			delete mTextObjects[i];
+		}
+	}
+
 	
 	delete mTCPListener;
 	delete mTCPClient;
