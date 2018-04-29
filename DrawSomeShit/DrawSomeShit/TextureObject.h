@@ -19,7 +19,9 @@ public:
 	virtual ~TextureObject();
 
 	bool loadTextureFromPixels32(GLuint * pixels, GLuint width, GLuint height);
+	bool loadTextureFromPixels32();
 	bool loadTextureFromFile(std::string path);
+	bool loadPixelsFromFile(std::string path);
 
 	virtual void freeTexture();
 
@@ -32,6 +34,10 @@ public:
 	GLuint getTextureID() { return mTextureID; }
 	GLuint getTextureWidth() { return mTextureWidth; }
 	GLuint getTextureHeight() { return mTextureHeight; }
+	
+	GLuint* getPixelData32() { return mPixels; }
+	GLuint getPixel32(GLuint x, GLuint y) { return mPixels[y * mTextureWidth + x]; }
+	void setPixel32(GLuint x, GLuint y, GLuint pixel) { mPixels[y * mTextureWidth + x] = pixel; }
 
 private:
 	void initVBO();
@@ -47,5 +53,8 @@ private:
 	// VBO IDs
 	GLuint mVBOID;
 	GLuint mIBOID;
+
+	// current pixels
+	GLuint * mPixels;
 };
 

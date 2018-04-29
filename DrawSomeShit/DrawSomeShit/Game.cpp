@@ -28,8 +28,7 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mConnectionType = ConnectionType::NONE;
 	mPlayerID = -1;
 	mObjectIDCounter = 0;
-	mTestSpriteSheet = NULL;
-	mTestSpriteObject = NULL;
+	mTestFontSheet = NULL;
 }
 
 
@@ -138,34 +137,14 @@ void Game::setupOpenGL(int width, int height)
 
 void Game::loadMedia()
 {
-	mTestSpriteSheet = new SpriteSheet();
+	mTestFontSheet = new FontSheet();
 
-	//Load texture
-	if (!mTestSpriteSheet->loadTextureFromFile("Assets/texture.png"))
+	if (!mTestFontSheet->loadBitmap("Assets/lazy_font.png"))
 	{
-		printf("Unable to load spritesheet texture!\n");
+		std::cout << "Failed to load font sheet!" << std::endl;
 	}
 
-	Rect clip = { 0.0f, 0.0f, 128.0f, 128.0f };
-	clip.x = 0.0f;
-	clip.y = 0.0f;
-	mTestSpriteSheet->addClipSprite(clip);
-	clip.x = 128.0f;
-	clip.y = 0.0f;
-	mTestSpriteSheet->addClipSprite(clip);
-	clip.x = 128.0f;
-	clip.y = 128.0f;
-	mTestSpriteSheet->addClipSprite(clip);
-	clip.x = 0.0f;
-	clip.y = 128.0f;
-	mTestSpriteSheet->addClipSprite(clip);
-
-	if (!mTestSpriteSheet->generateDataBuffer())
-	{
-		std::cout << "Unable to clip sprite sheet!" << std::endl;
-	}
-
-	mTestSpriteObject = new SpriteObject(Vector2(100, 100), mTestSpriteSheet->getTextureID(), mTestSpriteSheet->getVertexDataBuffer(), mTestSpriteSheet->getIndexBufferAtIndex(0));
+	mActiveGameObjectList.push_back(new TextObject(Vector2(100, 100), mTestFontSheet, "Huuto is the best!"));
 }
 
 void Game::setupConnection()
@@ -491,15 +470,12 @@ void Game::render()
 		}
 	}
 
-	mTestSpriteObject->render();
-
 	SDL_GL_SwapWindow(mWindow);
 }
 
 void Game::clean()
 {
-	delete mTestSpriteObject;
-	delete mTestSpriteSheet;
+	delete mTestFontSheet;
 
 	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
 	{

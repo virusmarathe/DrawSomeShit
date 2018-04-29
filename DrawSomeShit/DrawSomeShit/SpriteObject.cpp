@@ -39,9 +39,11 @@ void SpriteObject::render()
 		glVertexPointer(2, GL_FLOAT, sizeof(VertexData2D), (GLvoid*)offsetof(VertexData2D, position));
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIBOID);
 		glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
-
+		
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
+
+		glBindTexture(GL_TEXTURE_2D, NULL);
 	}
 }
 

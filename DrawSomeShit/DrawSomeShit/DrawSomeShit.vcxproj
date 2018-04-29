@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FontSheet.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="main.cpp" />
@@ -26,10 +27,12 @@
     <ClCompile Include="PencilObject.cpp" />
     <ClCompile Include="SpriteObject.cpp" />
     <ClCompile Include="SpriteSheet.cpp" />
+    <ClCompile Include="TextObject.cpp" />
     <ClCompile Include="TextureObject.cpp" />
     <ClCompile Include="Vector2.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FontSheet.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="NetworkManager.h" />
@@ -37,6 +40,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="SpriteObject.h" />
     <ClInclude Include="SpriteSheet.h" />
+    <ClInclude Include="TextObject.h" />
     <ClInclude Include="TextureObject.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="VertexData.h" />

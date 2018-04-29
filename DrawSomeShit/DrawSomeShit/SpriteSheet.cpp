@@ -25,7 +25,7 @@ Rect SpriteSheet::getClip(int index)
 	return mClips[index];
 }
 
-bool SpriteSheet::generateDataBuffer()
+bool SpriteSheet::generateDataBuffer(SpriteOrigin origin)
 {
 	if (getTextureID() != 0 && mClips.size() > 0)
 	{
@@ -40,6 +40,11 @@ bool SpriteSheet::generateDataBuffer()
 		GLfloat texHeight = getTextureHeight();
 		GLuint spriteIndices[4] = { 0, 0, 0 ,0 };
 
+		GLfloat vTop = 0.0f;
+		GLfloat vBottom = 0.0f;
+		GLfloat vLeft = 0.0f;
+		GLfloat vRight = 0.0f;
+
 		for (int i = 0; i < numTotalSprites; i++)
 		{
 			spriteIndices[0] = i * 4 + 0;
@@ -47,27 +52,53 @@ bool SpriteSheet::generateDataBuffer()
 			spriteIndices[2] = i * 4 + 2;
 			spriteIndices[3] = i * 4 + 3;
 
+			switch (origin)
+			{
+			case SPRITE_ORIGIN_BOTTOM_LEFT:
+				vTop = -mClips[i].h;
+				vRight = mClips[i].w;
+				break;
+			case SPRITE_ORIGIN_BOTTOM_RIGHT:
+				vTop = -mClips[i].h;
+				vLeft = -mClips[i].w;
+				break;
+			case SPRITE_ORIGIN_TOP_LEFT:
+				vBottom = mClips[i].h;
+				vRight = mClips[i].w;
+				break;
+			case SPRITE_ORIGIN_TOP_RIGHT:
+				vBottom = mClips[i].h;
+				vLeft = -mClips[i].w;
+				break;
+			default:
+				vTop = -mClips[i].h / 2.0f;
+				vBottom = mClips[i].h / 2.0f;
+				vLeft = -mClips[i].w / 2.0f;
+				vRight = mClips[i].w / 2.0f;
+				break;
+			}
+
 			// top left vertex
-			vertexData[spriteIndices[0]].position.x = -mClips[i].w / 2.0f;
-			vertexData[spriteIndices[0]].position.y = -mClips[i].h / 2.0f;
+			vertexData[spriteIndices[0]].position.x = vLeft;
+			vertexData[spriteIndices[0]].position.y = vTop;
 			vertexData[spriteIndices[0]].texCoord.s = mClips[i].x / texWidth;
 			vertexData[spriteIndices[0]].texCoord.t = mClips[i].y / texHeight;
 
 			// top right vertex
-			vertexData[spriteIndices[1]].position.x = mClips[i].w / 2.0f;
-			vertexData[spriteIndices[1]].position.y = -mClips[i].h / 2.0f;
+			vertexData[spriteIndices[1]].position.x = vRight;
+			vertexData[spriteIndices[1]].position.y = vTop;
 			vertexData[spriteIndices[1]].texCoord.s = (mClips[i].x + mClips[i].w) / texWidth;
 			vertexData[spriteIndices[1]].texCoord.t = mClips[i].y / texHeight;
 
 			// bottom right vertex
-			vertexData[spriteIndices[2]].position.x = mClips[i].w / 2.0f;
-			vertexData[spriteIndices[2]].position.y = mClips[i].h / 2.0f;
+			vertexData[spriteIndices[2]].position.x = vRight;
+			vertexData[spriteIndices[2]].position.y = vBottom;
 			vertexData[spriteIndices[2]].texCoord.s = (mClips[i].x + mClips[i].w) / texWidth;
 			vertexData[spriteIndices[2]].texCoord.t = (mClips[i].y + mClips[i].h) / texHeight;
 
 			// bottom left vertex
-			vertexData[spriteIndices[3]].position.x = -mClips[i].w / 2.0f;
-			vertexData[spriteIndices[3]].position.y = mClips[i].h / 2.0f;
+			vertexData[spriteIndices[3]].position.x = vLeft;
+			vertexData[spriteIndices[3]].position.y = vBottom;
 			vertexData[spriteIndices[3]].texCoord.s = mClips[i].x / texWidth;
 			vertexData[spriteIndices[3]].texCoord.t = (mClips[i].y + mClips[i].h) / texHeight;
 

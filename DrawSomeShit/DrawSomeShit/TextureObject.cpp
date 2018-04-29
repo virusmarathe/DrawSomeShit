@@ -8,6 +8,7 @@ TextureObject::TextureObject()
 	mClipRect = NULL;
 	mVBOID = 0;
 	mIBOID = 0;
+	mPixels = NULL;
 }
 
 TextureObject::TextureObject(Vector2 startPos, Rect * clipRect, int objectID, int ownerID) :GameObject(startPos, objectID, ownerID)
@@ -18,6 +19,7 @@ TextureObject::TextureObject(Vector2 startPos, Rect * clipRect, int objectID, in
 	mClipRect = clipRect;
 	mVBOID = 0;
 	mIBOID = 0;
+	mPixels = NULL;
 }
 
 
@@ -56,6 +58,57 @@ bool TextureObject::loadTextureFromPixels32(GLuint * pixels, GLuint width, GLuin
 	return true;
 }
 
+bool TextureObject::loadTextureFromPixels32()
+{
+	bool success = true;
+
+	if (mTextureID == 0 && mPixels != NULL)
+	{
+		glGenTextures(1, &mTextureID);
+		glBindTexture(GL_TEXTURE_2D, mTextureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mTextureWidth, mTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mPixels);
+
+		//Set texture parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		glBindTexture(GL_TEXTURE_2D, NULL);
+
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR)
+		{
+			printf("Error loading texture from %p pixels! %s\n", mPixels, gluErrorString(error));
+			success = false;
+		}
+		else
+		{
+			//Release pixels
+			delete[] mPixels;
+			mPixels = NULL;
+
+			//Generate VBO
+			initVBO();
+		}
+	}
+	else
+	{
+		printf("Cannot load texture from current pixels! ");
+		if (mTextureID != 0)
+		{
+			printf("A texture is already loaded!\n");
+		}
+		else if (mPixels == NULL)
+		{
+			printf("No pixels to create texture from!\n");
+		}
+		success = false;
+	}
+
+	return success;
+}
+
 bool TextureObject::loadTextureFromFile(std::string path)
 {
 	bool textureLoaded = false;
@@ -85,12 +138,62 @@ bool TextureObject::loadTextureFromFile(std::string path)
 	return textureLoaded;
 }
 
+bool TextureObject::loadPixelsFromFile(std::string path)
+{
+	//Deallocate texture data
+	freeTexture();
+
+	bool pixelsLoaded = false;
+
+	ILuint imgID = 0;
+	ilGenImages(1, &imgID);
+	ilBindImage(imgID);
+
+	//Load image
+	ILboolean success = ilLoadImage(path.c_str());
+
+	if (success == IL_TRUE)
+	{
+		//Convert image to RGBA
+		success = ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+		if (success == IL_TRUE)
+		{
+			//Initialize dimensions
+			mTextureWidth = (GLuint)ilGetInteger(IL_IMAGE_WIDTH);
+			mTextureHeight = (GLuint)ilGetInteger(IL_IMAGE_HEIGHT);
+
+			//Allocate memory for texture data
+			GLuint size = mTextureWidth * mTextureHeight;
+			mPixels = new GLuint[size];
+
+			//Copy pixels
+			memcpy(mPixels, ilGetData(), size * 4);
+			pixelsLoaded = true;
+		}
+
+		ilDeleteImages(1, &imgID);
+	}
+
+	if (!pixelsLoaded)
+	{
+		printf("Unable to load %s\n", path.c_str());
+	}
+
+	return pixelsLoaded;
+}
+
 void TextureObject::freeTexture()
 {
 	if (mTextureID != 0)
 	{
 		glDeleteTextures(1, &mTextureID);
 		mTextureID = 0;
+	}
+
+	if (mPixels != NULL)
+	{
+		delete[] mPixels;
+		mPixels = NULL;
 	}
 
 	mTextureWidth = 0;
