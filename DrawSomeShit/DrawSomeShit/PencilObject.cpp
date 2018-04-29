@@ -88,7 +88,7 @@ void PencilObject::handleInput(SDL_Event event)
 
 //				int id = GetID();
 				int idPackedData = 0;
-				idPackedData |= Game::Instance()->GetPlayerID();
+				idPackedData |= mOwnerID;
 				idPackedData |= GetID() << 8;
 
 				memcpy(buf + offset, &idPackedData, sizeof(int));
@@ -110,7 +110,7 @@ void PencilObject::handleInput(SDL_Event event)
 
 //			int id = GetID();
 			int idPackedData = 0;
-			idPackedData |= Game::Instance()->GetPlayerID();
+			idPackedData |= mOwnerID;
 			idPackedData |= GetID() << 8;
 
 			memcpy(buf + offset, &idPackedData, sizeof(int));

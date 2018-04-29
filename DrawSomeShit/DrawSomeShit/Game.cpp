@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #define PORT 6969
+#define MAX_TEXT_LINES 10
 
 Game * Game::sInstance = NULL;
 
@@ -150,7 +151,9 @@ void Game::loadMedia()
 
 	if (mConnectionType == ConnectionType::HOST)
 	{
-		mTextObjects.push_back(new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ""));
+		std::stringstream ss;
+		ss << mPlayerID << ": ";
+		mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
 	}
 }
 
@@ -246,7 +249,9 @@ void Game::handleNetworkData()
 					mMsg.UnLoadBytes(buf);
 					memcpy(&mPlayerID, buf, sizeof(int));
 					std::cout << "Player ID set to " << mPlayerID << std::endl;
-					mTextObjects.push_back(new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ""));
+					std::stringstream ss;
+					ss << mPlayerID << ": ";
+					mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
 				}
 			}
 			else
@@ -302,6 +307,8 @@ void Game::processCommandBuffer(charbuf buf, int bufSize)
 		ObjectNetworkMessageType type2 = (ObjectNetworkMessageType)(packedData & 0x000000FF);
 		int x = (packedData & 0x000FFF00) >> 8;
 		int y = (packedData & 0xFFF00000) >> 20;
+		int textLength = (packedData & 0xFFFFFF00) >> 8;
+		offset += sizeof(int);
 
 		switch (type2)
 		{
@@ -339,9 +346,28 @@ void Game::processCommandBuffer(charbuf buf, int bufSize)
 				delete mNetworkedGameObjectMap[id];
 			}
 			break;
-		}
+		case TEXT:
+			char textRec[128];
+			memcpy(textRec, buf + offset, textLength);
+			textRec[textLength] = '\0';
+			offset += textLength;
+			TextObject * mNewText = new TextObject(Vector2(100, mScreenHeight - 100), id, playerID, mTestFontSheet, textRec);
+			mNewText->setSent(true);
+			mTextObjects.push_back(mNewText);
+			for (int i = 0; i < mTextObjects.size(); i++)
+			{
+				((TextObject*)mTextObjects[i])->forceUp();
+			}
+			mNewText = NULL;
 
-		offset += sizeof(int);
+			if (mTextObjects.size() > MAX_TEXT_LINES)
+			{
+				delete mTextObjects.front();
+				mTextObjects.erase(mTextObjects.begin());
+			}
+
+			break;
+		}
 	}
 }
 
@@ -359,7 +385,7 @@ void Game::handleEvents()
 		case SDL_MOUSEBUTTONDOWN:
 		{
 			// for now mouse button is creating a pencil object, but what gets created should change based on selection, maybe a ObjectManager
-			PencilObject * obj = new PencilObject(Vector2((float)event.motion.x, (float)event.motion.y), Utils::GetIDForPlayer(mPlayerID), mPlayerID);
+			PencilObject * obj = new PencilObject(Vector2((float)event.motion.x, (float)event.motion.y), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID);
 			mActiveGameObjectList.push_back(obj);
 			if (mConnected)
 			{
@@ -402,6 +428,10 @@ void Game::handleEvents()
 		{
 			mTextObjects[i]->handleInput(event);
 		}
+		if (mNextTextObject != NULL)
+		{
+			mNextTextObject->handleInput(event);
+		}
 	}
 
 	// undo implementation by popping the last object from the stack
@@ -435,8 +465,12 @@ void Game::handleEvents()
 	if (keysPressed[SDL_SCANCODE_RETURN] && !mEnterWasPressed)
 	{
 		mEnterWasPressed = true;
-		mTextObjects.push_back(new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ""));
-		if (mTextObjects.size() > 10)
+		std::stringstream ss;
+		ss << mPlayerID << ": ";
+		mTextObjects.push_back(mNextTextObject);
+		mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
+
+		if (mTextObjects.size() > MAX_TEXT_LINES)
 		{
 			delete mTextObjects.front();
 			mTextObjects.erase(mTextObjects.begin());
@@ -501,6 +535,10 @@ void Game::render()
 		{
 			mTextObjects[i]->render();
 		}
+	}
+	if (mNextTextObject != NULL)
+	{
+		mNextTextObject->render();
 	}
 
 	SDL_GL_SwapWindow(mWindow);

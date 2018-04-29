@@ -42,7 +42,7 @@ Color Utils::GetColorForPlayer(int playerID)
 	return mColor;
 }
 
-int Utils::GetIDForPlayer(int playerID)
+int Utils::GetNextObjectIDForPlayer(int playerID)
 {
 	int id = playerID * MAX_OBJECTS + Utils::mIDCounter;
 	Utils::mIDCounter++;

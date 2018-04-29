@@ -1,6 +1,7 @@
 #pragma once
 #include "GameObject.h"
 #include "FontSheet.h"
+#include "Game.h"
 #include "Utils.h"
 
 class TextObject : public GameObject
@@ -17,6 +18,10 @@ public:
 
 	std::string getText() { return mText; }
 	void setText(std::string text) { mText = text; }
+
+	void forceUp();
+
+	void setSent(bool val) { mIsSent = val; }
 
 private:
 	FontSheet * mFontSheetRef;

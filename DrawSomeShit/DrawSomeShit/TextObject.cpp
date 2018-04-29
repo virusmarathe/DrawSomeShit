@@ -100,6 +100,27 @@ void TextObject::handleInput(SDL_Event event)
 	case SDL_KEYDOWN:
 		if (event.key.keysym.scancode == SDL_SCANCODE_RETURN)
 		{
+			if (!mIsSent)
+			{
+				charbuf buf;
+				int offset = 0;
+				int idPackedData = 0;
+				idPackedData |= mOwnerID;
+				idPackedData |= GetID() << 8;
+
+				memcpy(buf + offset, &idPackedData, sizeof(int));
+				offset += sizeof(int);
+
+				int packedData = 0;
+				packedData |= ObjectNetworkMessageType::TEXT;
+				packedData |= mText.length() << 8;
+				memcpy(buf + offset, &packedData, sizeof(int));
+				offset += sizeof(int);
+
+				memcpy(buf + offset, mText.c_str(), mText.length());
+
+				Game::Instance()->SendNetworkMessage(buf, 8 + mText.length());
+			}
 			mIsSent = true;
 			mPosition.Y -= (mNewLine / 1.5f);
 		}
@@ -111,5 +132,13 @@ void TextObject::handleInput(SDL_Event event)
 			}
 		}
 		break;
+	}
+}
+
+void TextObject::forceUp()
+{
+	if (mIsSent)
+	{
+		mPosition.Y -= (mNewLine / 1.5f);
 	}
 }

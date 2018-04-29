@@ -17,7 +17,7 @@ class Utils
 {
 public:
 	static Color GetColorForPlayer(int playerID);
-	static int GetIDForPlayer(int playerID);
+	static int GetNextObjectIDForPlayer(int playerID);
 
 	static int mIDCounter;
 };

@@ -8,6 +8,7 @@
 #include <gl/GLU.h>
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <IL/il.h>
@@ -66,7 +67,7 @@ private:
 
 	// need switch this to an object pool so you don't create every object at runtime
 	std::vector<GameObject*> mActiveGameObjectList;
-	std::vector<TextObject*> mTextObjects;
+	std::vector<GameObject*> mTextObjects;
 	bool keysPressed[SDL_NUM_SCANCODES];
 
 	// networking variables
@@ -78,6 +79,7 @@ private:
 	HostSocketTCP * mTCPListener;
 
 	FontSheet * mTestFontSheet;
+	GameObject * mNextTextObject;
 
 	std::vector<GameObject *> mNetworkedGameObjectList;
 	std::map<int, GameObject*> mNetworkedGameObjectMap;
