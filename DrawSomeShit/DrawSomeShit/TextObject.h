@@ -1,11 +1,12 @@
 #pragma once
 #include "GameObject.h"
 #include "FontSheet.h"
+#include "Utils.h"
 
 class TextObject : public GameObject
 {
 public:
-	TextObject(Vector2 pos, FontSheet * fontSheetRef, std::string text);
+	TextObject(Vector2 pos, int objectID, int ownerID, FontSheet * fontSheetRef, std::string text);
 	~TextObject();
 
 	void update(float deltaTime);
@@ -26,5 +27,6 @@ private:
 	GLfloat mNewLine;
 	std::vector<Rect> mClips;
 	bool mIsSent;
+	Color mColor;
 };
 

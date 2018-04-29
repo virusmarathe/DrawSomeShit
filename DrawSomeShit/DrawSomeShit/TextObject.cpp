@@ -2,9 +2,8 @@
 
 const int MAX_TEXT_LENGTH = 128;
 
-TextObject::TextObject(Vector2 pos, FontSheet * fontSheetRef, std::string text)
+TextObject::TextObject(Vector2 pos, int objectID, int ownerID, FontSheet * fontSheetRef, std::string text) : GameObject(pos, objectID, ownerID)
 {
-	mPosition = pos;
 	mFontSheetRef = fontSheetRef;
 	mText = text;
 	mVBOID = mFontSheetRef->getVertexDataBuffer();
@@ -13,6 +12,7 @@ TextObject::TextObject(Vector2 pos, FontSheet * fontSheetRef, std::string text)
 	mTextureID = mFontSheetRef->getTextureID();
 	mClips = mFontSheetRef->getClipsRef();
 	mIsSent = false;
+	mColor = Utils::GetColorForPlayer(mOwnerID);
 }
 
 
@@ -37,10 +37,13 @@ void TextObject::render()
 	{
 		glTranslatef(mPosition.X, mPosition.Y, 1.0f);
 		glScalef(0.5f, 0.5f, 0.5f);
-		glColor3f(1, 1, 1);
 		if (mIsSent)
 		{
-			glColor3f(1, 0, 0);
+			glColor3f(mColor.r, mColor.g, mColor.b);
+		}
+		else
+		{
+			glColor3f(1, 1, 1);
 		}
 
 		glBindTexture(GL_TEXTURE_2D, mTextureID);

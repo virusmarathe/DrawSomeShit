@@ -78,12 +78,10 @@ private:
 	HostSocketTCP * mTCPListener;
 
 	FontSheet * mTestFontSheet;
-	TextObject * mLastTextObject;
 
 	std::vector<GameObject *> mNetworkedGameObjectList;
 	std::map<int, GameObject*> mNetworkedGameObjectMap;
 	int mPlayerID;
-	int mObjectIDCounter;
 
 	bool mEnterWasPressed = true;
 };

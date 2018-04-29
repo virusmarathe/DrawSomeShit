@@ -39,6 +39,8 @@ bool FontSheet::loadBitmap(std::string path)
 		int cellX = 0;
 		int cellY = 0;
 
+		float charPadding = 5.0f;
+
 		GLuint currentChar = 0;
 		Rect nextClip = { 0.0f, 0.0f, cellW, cellH };
 
@@ -81,7 +83,7 @@ bool FontSheet::loadBitmap(std::string path)
 
 						if (getPixel32(pixelX, pixelY) != BLACK_PIXEL)
 						{
-							nextClip.w = (pixelX - nextClip.x) + 1;
+							nextClip.w = (pixelX - nextClip.x) + 1 + charPadding;
 							pixelCol = -1;
 							pixelRow = cellH;
 						}
@@ -174,7 +176,7 @@ bool FontSheet::loadBitmap(std::string path)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-		mSpace = cellW / 2.0f;
+		mSpace = cellW / 3.0f;
 		mNewLine = aBottom - top;
 		mLineHeight = bottom - top;
 

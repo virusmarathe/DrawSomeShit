@@ -1,7 +1,6 @@
 #include "Game.h"
 
 #define PORT 6969
-#define MAX_OBJECTS 10000
 
 Game * Game::sInstance = NULL;
 
@@ -27,9 +26,7 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mRemoteIP = NULL;
 	mConnectionType = ConnectionType::NONE;
 	mPlayerID = -1;
-	mObjectIDCounter = 0;
 	mTestFontSheet = NULL;
-	mLastTextObject = NULL;
 }
 
 
@@ -151,8 +148,10 @@ void Game::loadMedia()
 		std::cout << "Failed to load font sheet!" << std::endl;
 	}
 
-	mLastTextObject = new TextObject(Vector2(100, mScreenHeight - 100), mTestFontSheet, "Huuto is the best!");
-	mTextObjects.push_back(mLastTextObject);
+	if (mConnectionType == ConnectionType::HOST)
+	{
+		mTextObjects.push_back(new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ""));
+	}
 }
 
 void Game::setupConnection()
@@ -247,6 +246,7 @@ void Game::handleNetworkData()
 					mMsg.UnLoadBytes(buf);
 					memcpy(&mPlayerID, buf, sizeof(int));
 					std::cout << "Player ID set to " << mPlayerID << std::endl;
+					mTextObjects.push_back(new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ""));
 				}
 			}
 			else
@@ -359,9 +359,8 @@ void Game::handleEvents()
 		case SDL_MOUSEBUTTONDOWN:
 		{
 			// for now mouse button is creating a pencil object, but what gets created should change based on selection, maybe a ObjectManager
-			PencilObject * obj = new PencilObject(Vector2((float)event.motion.x, (float)event.motion.y), mPlayerID * MAX_OBJECTS + mObjectIDCounter, mPlayerID);
+			PencilObject * obj = new PencilObject(Vector2((float)event.motion.x, (float)event.motion.y), Utils::GetIDForPlayer(mPlayerID), mPlayerID);
 			mActiveGameObjectList.push_back(obj);
-			mObjectIDCounter++;
 			if (mConnected)
 			{
 				charbuf buf;
@@ -436,8 +435,7 @@ void Game::handleEvents()
 	if (keysPressed[SDL_SCANCODE_RETURN] && !mEnterWasPressed)
 	{
 		mEnterWasPressed = true;
-		mLastTextObject = new TextObject(Vector2(100, mScreenHeight - 100), mTestFontSheet, "");
-		mTextObjects.push_back(mLastTextObject);
+		mTextObjects.push_back(new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ""));
 		if (mTextObjects.size() > 10)
 		{
 			delete mTextObjects.front();

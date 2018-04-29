@@ -14,7 +14,8 @@ enum ObjectNetworkMessageType
 	CREATE,
 	UPDATE,
 	FINISH,
-	REMOVE
+	REMOVE,
+	TEXT
 };
 
 class GameObject

@@ -18,7 +18,7 @@ PencilObject::PencilObject(Vector2 startPos, int objectID, int ownerID) : GameOb
 	addPoints(startPos);
 	mLastPointAddedPosition = Vector2(0, 0);
 	mFinishedDrawing = false;
-	SetColorByPlayerID();
+	mColor = Utils::GetColorForPlayer(mOwnerID);
 }
 
 
@@ -70,40 +70,6 @@ void PencilObject::addPoints(Vector2 newPoint)
 	{
 		mPoints.push_back(newPoint);
 		mLastPointAddedPosition = newPoint;
-	}
-}
-
-void PencilObject::SetColorByPlayerID()
-{
-	switch (mOwnerID)
-	{
-	case 0:
-		mColor.SetColor(1, 0, 0);
-		break;
-	case 1:
-		mColor.SetColor(0, 1, 0);
-		break;
-	case 2:
-		mColor.SetColor(0, 0, 1);
-		break;
-	case 3:
-		mColor.SetColor(1, 1, 0);
-		break;
-	case 4:
-		mColor.SetColor(0, 1, 1);
-		break;
-	case 5:
-		mColor.SetColor(1, 0, 1);
-		break;
-	case 6:
-		mColor.SetColor(1, 1, 1);
-		break;
-	case 7:
-		mColor.SetColor(0.4f, 1, .25f);
-		break;
-	default:
-		mColor.SetColor(1, 1, 1);
-		break;
 	}
 }
 
