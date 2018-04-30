@@ -28,6 +28,7 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mConnectionType = ConnectionType::NONE;
 	mPlayerID = -1;
 	mTestFontSheet = NULL;
+	mCurrentWord = NULL;
 }
 
 
@@ -149,12 +150,26 @@ void Game::loadMedia()
 		std::cout << "Failed to load font sheet!" << std::endl;
 	}
 
+	std::ifstream myFile("Assets/easy.txt");
+	std::string line;
+	if (myFile)
+	{
+		while (std::getline(myFile, line))
+		{
+			mWordlist.push_back(line);
+		}
+		myFile.close();
+	}
+
 	if (mConnectionType == ConnectionType::HOST)
 	{
 		std::stringstream ss;
 		ss << mPlayerID << ": ";
 		mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
 	}
+
+	std::string word = mWordlist[rand() % mWordlist.size()];
+	mCurrentWord = new TextObject(Vector2(mScreenWidth / 2.0f, 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, word);
 }
 
 void Game::setupConnection()
@@ -540,6 +555,10 @@ void Game::render()
 	{
 		mNextTextObject->render();
 	}
+	if (mCurrentWord != NULL)
+	{
+		mCurrentWord->render();
+	}
 
 	SDL_GL_SwapWindow(mWindow);
 }
@@ -572,6 +591,7 @@ void Game::clean()
 		}
 	}
 
+	delete mCurrentWord;
 	
 	delete mTCPListener;
 	delete mTCPClient;

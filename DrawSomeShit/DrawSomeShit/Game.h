@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <IL/il.h>
@@ -86,5 +87,8 @@ private:
 	int mPlayerID;
 
 	bool mEnterWasPressed = true;
+
+	std::vector<std::string> mWordlist;
+	GameObject * mCurrentWord;
 };
 
