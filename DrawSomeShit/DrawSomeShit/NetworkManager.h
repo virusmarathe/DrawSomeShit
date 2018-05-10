@@ -13,11 +13,32 @@ enum ConnectionType
 	HOST
 };
 
+// forward decs
+class ClientSocketTCP;
+class ConnectionInfo;
+class NetworkMessage;
+class HostSocketTCP;
+
 class NetworkManager
 {
 public:
 	static bool Init(); // Initialize SDL_net
 	static void Quit(); // Exit SDL_net
+	static void StartConnection(std::string ipString);
+	static int HandleNetworkData(charbuf & outVal);
+	static void SendNetworkMessage(charbuf & dataBuf, int bufSize, int clientIndex = -1);
+	static bool IsConnected() { return mConnected; }
+
+public:
+	static ConnectionType mConnectionType;
+
+private:
+	// networking variables
+	static bool mConnected;
+	static ClientSocketTCP * mTCPClient;
+	static ConnectionInfo * mRemoteIP;
+	static NetworkMessage mMsg;
+	static HostSocketTCP * mTCPListener;
 };
 
 class NetworkMessage

@@ -1,8 +1,16 @@
 #include "NetworkManager.h"
 
 #define SDLNET_ERROR(s) std::cerr << s << ": " << SDLNet_GetError() << std::endl
+#define PORT 6969
 
 //===================================================================================================================
+
+ConnectionType NetworkManager::mConnectionType = ConnectionType::NONE;
+HostSocketTCP * NetworkManager::mTCPListener = NULL;
+ClientSocketTCP * NetworkManager::mTCPClient = NULL;
+bool NetworkManager::mConnected = false;
+ConnectionInfo * NetworkManager::mRemoteIP = NULL;
+NetworkMessage NetworkManager::mMsg;
 
 bool NetworkManager::Init()
 {
@@ -16,7 +24,106 @@ bool NetworkManager::Init()
 
 void NetworkManager::Quit()
 {
+	delete mTCPListener;
+	delete mTCPClient;
+	delete mRemoteIP;
+
 	SDLNet_Quit();
+}
+
+void NetworkManager::StartConnection(std::string ipString)
+{
+	if (mConnectionType == ConnectionType::HOST)
+	{
+		mTCPListener = new HostSocketTCP(PORT);
+		if (!mTCPListener->Valid())
+		{
+			exit(EXIT_FAILURE);
+		}
+		mTCPClient = new ClientSocketTCP();
+		mTCPClient->SetPlayerID(0);
+	}
+	else if (mConnectionType == ConnectionType::CLIENT)
+	{
+		mTCPClient = new ClientSocketTCP();
+
+		mRemoteIP = new ConnectionInfo(ipString.c_str(), PORT);
+	}
+}
+
+int NetworkManager::HandleNetworkData(charbuf & outVal)
+{
+	int bufSize = 0;
+
+	if (!mConnected)
+	{
+		if (NetworkManager::mConnectionType == ConnectionType::HOST)
+		{
+			if (mTCPListener->Accept(*mTCPClient))
+			{
+				mConnected = true;
+			}
+		}
+		else if (NetworkManager::mConnectionType == ConnectionType::CLIENT)
+		{
+			if (mTCPClient->Connect(*mRemoteIP))
+			{
+				if (mTCPClient->Valid())
+				{
+					mConnected = true;
+				}
+			}
+		}
+	}
+	else
+	{
+		if (NetworkManager::mConnectionType == ConnectionType::HOST)
+		{
+			if (mTCPListener->Accept(*mTCPClient))
+			{
+				mConnected = true;
+			}
+		}
+
+		if (mTCPClient->Ready())
+		{
+			if (NetworkManager::mConnectionType == ConnectionType::HOST)
+			{
+				for (int i = 0; i < MAX_SOCKETS; i++)
+				{
+					if (mTCPClient->Recieve(mMsg, i))
+					{
+						bufSize = mMsg.UnLoadBytes(outVal);
+						SendNetworkMessage(outVal, bufSize, i);
+					}
+					else
+					{
+						//mConnected = false;
+					}
+				}
+			}
+			else if (NetworkManager::mConnectionType == ConnectionType::CLIENT)
+			{
+				if (mTCPClient->Recieve(mMsg, 0))
+				{
+					bufSize = mMsg.UnLoadBytes(outVal);
+				}
+				else
+				{
+					//mConnected = false;
+				}
+			}
+		}
+	}
+
+	return bufSize;
+}
+
+void NetworkManager::SendNetworkMessage(charbuf & dataBuf, int bufSize, int clientIndex)
+{
+	mMsg.LoadBytes(dataBuf, bufSize);
+	mMsg.Finish();
+	mTCPClient->Send(mMsg, clientIndex);
 }
 
 

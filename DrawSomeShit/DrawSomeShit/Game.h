@@ -43,17 +43,13 @@ public:
 
 	bool running() { return mIsRunning; }
 
-	void SendNetworkMessage(charbuf & dataBuf, int msgSize);
-	void ForwardMessageToClients(charbuf & dataBuf, int clientIndex, int bufSize);
-
 	int GetPlayerID() { return mPlayerID; }
 
 private:
 	void setupOpenGL(int width, int height);
 	void loadMedia();
 	void setupConnection();
-	void handleNetworkData();
-	void processCommandBuffer(charbuf buf, int bufSize);
+	void processCommandBuffer(charbuf &buf, int bufSize);
 
 private:
 	static Game * sInstance;
@@ -70,14 +66,6 @@ private:
 	std::vector<GameObject*> mActiveGameObjectList;
 	std::vector<GameObject*> mTextObjects;
 	bool keysPressed[SDL_NUM_SCANCODES];
-
-	// networking variables
-	bool mConnected;
-	ConnectionType mConnectionType;
-	ClientSocketTCP * mTCPClient;
-	ConnectionInfo * mRemoteIP;
-	NetworkMessage mMsg;
-	HostSocketTCP * mTCPListener;
 
 	FontSheet * mTestFontSheet;
 	GameObject * mNextTextObject;

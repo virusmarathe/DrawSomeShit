@@ -1,6 +1,5 @@
 #include "Game.h"
 
-#define PORT 6969
 #define MAX_TEXT_LINES 10
 
 Game * Game::sInstance = NULL;
@@ -21,11 +20,6 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 		keysPressed[i] = false;
 	}
 
-	mTCPListener = NULL;
-	mTCPClient = NULL;
-	mConnected = false;
-	mRemoteIP = NULL;
-	mConnectionType = ConnectionType::NONE;
 	mPlayerID = -1;
 	mTestFontSheet = NULL;
 	mCurrentWord = NULL;
@@ -83,20 +77,6 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 	setupOpenGL(width, height);
 	mLastFrameTime = SDL_GetTicks();
 	loadMedia();
-}
-
-void Game::SendNetworkMessage(charbuf & dataBuf, int msgSize)
-{
-	mMsg.LoadBytes(dataBuf, msgSize);
-	mMsg.Finish();
-	mTCPClient->Send(mMsg);
-}
-
-void Game::ForwardMessageToClients(charbuf & dataBuf, int clientIndex, int bufSize)
-{
-	mMsg.LoadBytes(dataBuf, bufSize);
-	mMsg.Finish();
-	mTCPClient->Send(mMsg, clientIndex);
 }
 
 void Game::setupOpenGL(int width, int height)
@@ -161,7 +141,7 @@ void Game::loadMedia()
 		myFile.close();
 	}
 
-	if (mConnectionType == ConnectionType::HOST)
+	if (NetworkManager::mConnectionType == ConnectionType::HOST)
 	{
 		std::stringstream ss;
 		ss << mPlayerID << ": ";
@@ -185,12 +165,12 @@ void Game::setupConnection()
 		switch (num)
 		{
 		case 1:
-			mConnectionType = ConnectionType::HOST;
+			NetworkManager::mConnectionType = ConnectionType::HOST;
 			break;
 		case 2:
 			std::cout << "Enter the host ip: ";
 			std::cin >> ipString;
-			mConnectionType = ConnectionType::CLIENT;
+			NetworkManager::mConnectionType = ConnectionType::CLIENT;
 			break;
 		case 3:
 			mIsRunning = false;
@@ -202,112 +182,28 @@ void Game::setupConnection()
 		}
 	}
 
-	if (mConnectionType == ConnectionType::HOST)
+	NetworkManager::StartConnection(ipString);
+	if (NetworkManager::mConnectionType == ConnectionType::HOST)
 	{
-		mTCPListener = new HostSocketTCP(PORT);
-		if (!mTCPListener->Valid())
-		{
-			exit(EXIT_FAILURE);
-		}
-		mTCPClient = new ClientSocketTCP();
-		mTCPClient->SetPlayerID(0);
 		mPlayerID = 0;
 	}
-	else if (mConnectionType == ConnectionType::CLIENT)
-	{
-		mTCPClient = new ClientSocketTCP();
-
-		mRemoteIP = new ConnectionInfo(ipString, PORT);
-	}
-
 }
 
-void Game::handleNetworkData()
+void Game::processCommandBuffer(charbuf & buf, int bufSize)
 {
-	if (!mConnected)
-	{
-		if (mConnectionType == ConnectionType::HOST)
-		{
-			if (mTCPListener->Accept(*mTCPClient))
-			{
-				mConnected = true;
-			}
-		}
-		else if (mConnectionType == ConnectionType::CLIENT)
-		{
-			if (mTCPClient->Connect(*mRemoteIP))
-			{
-				if (mTCPClient->Valid())
-				{
-					mConnected = true;
-				}
-			}
-		}
-	}
-	else
-	{
-		if (mConnectionType == ConnectionType::HOST)
-		{
-			if (mTCPListener->Accept(*mTCPClient))
-			{
-				mConnected = true;
-			}
-		}
+	if (bufSize == 0) return; // nothing to process
 
-		if (mTCPClient->Ready())
-		{
-			if (mPlayerID == -1)
-			{
-				if (mTCPClient->Recieve(mMsg, 0))
-				{
-					char buf[1024];
-					mMsg.UnLoadBytes(buf);
-					memcpy(&mPlayerID, buf, sizeof(int));
-					std::cout << "Player ID set to " << mPlayerID << std::endl;
-					std::stringstream ss;
-					ss << mPlayerID << ": ";
-					mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
-				}
-			}
-			else
-			{
-				if (mConnectionType == ConnectionType::HOST)
-				{
-					for (int i = 0; i < MAX_SOCKETS; i++)
-					{
-						if (mTCPClient->Recieve(mMsg, i))
-						{
-							char buf[1024];
-							int bufSize = mMsg.UnLoadBytes(buf);
-							ForwardMessageToClients(buf, i, bufSize);
-							processCommandBuffer(buf, bufSize);
-						}
-						else
-						{
-							//mConnected = false;
-						}
-					}
-				}
-				else if (mConnectionType == ConnectionType::CLIENT)
-				{
-					if (mTCPClient->Recieve(mMsg, 0))
-					{
-						char buf[1024];
-						int bufSize = mMsg.UnLoadBytes(buf);
-						processCommandBuffer(buf, bufSize);
-					}
-					else
-					{
-						//mConnected = false;
-					}
-				}
-			}			
-		}
+	// if player id is not yet set don't do accept any other data
+	if (mPlayerID == -1)
+	{
+		memcpy(&mPlayerID, buf, sizeof(int));
+		std::cout << "Player ID set to " << mPlayerID << std::endl;
+		std::stringstream ss;
+		ss << mPlayerID << ": ";
+		mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
+		return;
 	}
-}
 
-void Game::processCommandBuffer(charbuf buf, int bufSize)
-{
 	int offset = 0;
 	while (offset < bufSize)
 	{
@@ -402,7 +298,7 @@ void Game::handleEvents()
 			// for now mouse button is creating a pencil object, but what gets created should change based on selection, maybe a ObjectManager
 			PencilObject * obj = new PencilObject(Vector2((float)event.motion.x, (float)event.motion.y), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID);
 			mActiveGameObjectList.push_back(obj);
-			if (mConnected)
+			if (NetworkManager::IsConnected())
 			{
 				charbuf buf;
 				int offset = 0;
@@ -419,7 +315,7 @@ void Game::handleEvents()
 				packedData |= event.motion.x << 8; 				// 8-19 bits x
 				packedData |= event.motion.y << 20;				// 20-31 bits y
 				memcpy(buf + offset, &packedData, sizeof(int));
-				SendNetworkMessage(buf, 8);
+				NetworkManager::SendNetworkMessage(buf, 8);
 			}
 			break;
 		}
@@ -468,7 +364,7 @@ void Game::handleEvents()
 			int packedData = 0;
 			packedData |= ObjectNetworkMessageType::REMOVE;
 			memcpy(buf + offset, &packedData, sizeof(int));
-			Game::Instance()->SendNetworkMessage(buf, 8);
+			NetworkManager::SendNetworkMessage(buf, 8);
 
 			delete mActiveGameObjectList.back();
 			mActiveGameObjectList.pop_back();
@@ -499,7 +395,9 @@ void Game::handleEvents()
 
 void Game::update()
 {
-	handleNetworkData();
+	charbuf buf;
+	int bufSize = NetworkManager::HandleNetworkData(buf);
+	processCommandBuffer(buf, bufSize);
 
 	Uint32 currentFrameTime = SDL_GetTicks();
 	float deltaTime = (currentFrameTime - mLastFrameTime)/1000.0f;
@@ -593,10 +491,6 @@ void Game::clean()
 
 	delete mCurrentWord;
 	
-	delete mTCPListener;
-	delete mTCPClient;
-	delete mRemoteIP;
-
 	NetworkManager::Quit();
 	SDL_DestroyWindow(mWindow);
 	SDL_Quit();

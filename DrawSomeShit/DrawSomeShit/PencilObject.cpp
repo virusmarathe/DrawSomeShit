@@ -99,7 +99,7 @@ void PencilObject::handleInput(SDL_Event event)
 				packedData |= event.motion.x << 8;
 				packedData |= event.motion.y << 20;
 				memcpy(buf + offset, &packedData, sizeof(int));
-				Game::Instance()->SendNetworkMessage(buf, 8);
+				NetworkManager::SendNetworkMessage(buf, 8);
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
@@ -118,7 +118,7 @@ void PencilObject::handleInput(SDL_Event event)
 
 			int messageType = ObjectNetworkMessageType::FINISH;
 			memcpy(buf + offset, &messageType, sizeof(int));
-			Game::Instance()->SendNetworkMessage(buf, 8);
+			NetworkManager::SendNetworkMessage(buf, 8);
 			break;
 		}
 		default:

@@ -1,7 +1,6 @@
 #pragma once
 #include "GameObject.h"
 #include "FontSheet.h"
-#include "Game.h"
 #include "Utils.h"
 
 class TextObject : public GameObject

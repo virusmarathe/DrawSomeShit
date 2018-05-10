@@ -119,7 +119,7 @@ void TextObject::handleInput(SDL_Event event)
 
 				memcpy(buf + offset, mText.c_str(), mText.length());
 
-				Game::Instance()->SendNetworkMessage(buf, 8 + mText.length());
+				NetworkManager::SendNetworkMessage(buf, 8 + mText.length());
 			}
 			mIsSent = true;
 			mPosition.Y -= (mNewLine / 1.5f);

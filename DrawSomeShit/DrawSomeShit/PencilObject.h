@@ -1,6 +1,5 @@
 #pragma once
 #include "GameObject.h"
-#include "Game.h"
 #include "Utils.h"
 
 class PencilObject : public GameObject
