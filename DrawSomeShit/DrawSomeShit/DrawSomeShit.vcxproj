@@ -41,6 +41,8 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="SpriteObject.h" />
     <ClInclude Include="SpriteSheet.h" />
+    <ClInclude Include="State.h" />
+    <ClInclude Include="StateMachine.h" />
     <ClInclude Include="TextObject.h" />
     <ClInclude Include="TextureObject.h" />
     <ClInclude Include="Utils.h" />

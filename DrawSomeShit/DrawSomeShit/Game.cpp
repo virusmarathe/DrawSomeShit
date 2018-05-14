@@ -23,6 +23,8 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mPlayerID = -1;
 	mTestFontSheet = NULL;
 	mCurrentWord = NULL;
+
+	mStateMachine = new StateMachine<Game>(this);
 }
 
 
@@ -490,6 +492,8 @@ void Game::clean()
 	}
 
 	delete mCurrentWord;
+
+	delete mStateMachine;
 	
 	NetworkManager::Quit();
 	SDL_DestroyWindow(mWindow);

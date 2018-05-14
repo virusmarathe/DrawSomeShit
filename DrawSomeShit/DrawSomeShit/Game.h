@@ -14,6 +14,7 @@
 #include <map>
 #include <IL/il.h>
 #include <IL/ilu.h>
+#include "StateMachine.h"
 #include "PencilObject.h"
 #include "Vector2.h"
 #include "NetworkManager.h"
@@ -78,5 +79,7 @@ private:
 
 	std::vector<std::string> mWordlist;
 	GameObject * mCurrentWord;
+
+	StateMachine<Game> * mStateMachine;
 };
 
