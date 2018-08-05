@@ -11,5 +11,8 @@ public:
 	virtual void Enter(Game*);
 	virtual void Update(Game*, float deltaTime);
 	virtual void Exit(Game*);
+
+private:
+	float mfTimer;
 };
 

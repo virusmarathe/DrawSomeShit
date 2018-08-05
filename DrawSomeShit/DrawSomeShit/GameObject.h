@@ -16,7 +16,9 @@ enum ObjectNetworkMessageType
 	FINISH,
 	REMOVE,
 	TEXT,
-	GAMESTATECHANGE
+	GAMESTATECHANGE,
+	NEXTDRAWERID,
+	NEXTWORD
 };
 
 class GameObject

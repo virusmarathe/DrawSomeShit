@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DrawingGameState.cpp" />
     <ClCompile Include="FontSheet.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObject.cpp" />
@@ -35,6 +36,7 @@
     <ClCompile Include="Vector2.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DrawingGameState.h" />
     <ClInclude Include="FontSheet.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />

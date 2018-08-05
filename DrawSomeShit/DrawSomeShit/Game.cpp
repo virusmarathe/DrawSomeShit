@@ -23,6 +23,9 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mPlayerID = -1;
 	mTestFontSheet = NULL;
 	mCurrentWord = NULL;
+	mCurrentPlayerIndex = -1;
+	mCurrentDrawerPlayerID = 0;
+	mNextWord = "";
 
 	mStateMachine = new StateMachine<Game>(this);
 }
@@ -82,7 +85,9 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 
 	mGameStates[GameState::Reset] = new ResetGameState(mIsServer);
 	mGameStates[GameState::SelectWord] = new SelectWordGameState(mIsServer);
+	mGameStates[GameState::Drawing] = new DrawingGameState(mIsServer);
 	mStateMachine->ChangeState(mGameStates[GameState::Reset]);
+	mCurrentGameStateID = GameState::Reset;
 }
 
 void Game::ChangeGameStateServer(GameState state)
@@ -111,11 +116,73 @@ void Game::ChangeGameStateServer(GameState state)
 void Game::ChangeGameStateLocal(GameState state)
 {
 	mStateMachine->ChangeState(mGameStates[state]);
+	mCurrentGameStateID = state;
 }
 
 void Game::SetCurrentWord(std::string str)
 {
 	mCurrentWord->setText(str);
+}
+
+void Game::OnNewPlayerConnected(int id)
+{
+	mPlayerOrder.push_back(id);
+}
+
+void Game::UpdateNextDrawer()
+{
+	mCurrentPlayerIndex++;
+	if (mCurrentPlayerIndex >= mPlayerOrder.size())
+	{
+		mCurrentPlayerIndex = 0;
+	}
+
+	if (NetworkManager::IsConnected() && mIsServer)
+	{
+		charbuf buf;
+		int offset = 0;
+
+		int idPackedData = 0;
+		idPackedData |= mPlayerID;
+		//int id = obj->GetID();
+		memcpy(buf + offset, &idPackedData, sizeof(int));
+		offset += sizeof(int);
+
+		int packedData = 0;	// 32 bit data
+		packedData |= ObjectNetworkMessageType::NEXTDRAWERID; // 0-7 bits command/id
+		packedData |= mPlayerOrder[mCurrentPlayerIndex] << 8;
+		memcpy(buf + offset, &packedData, sizeof(int));
+		NetworkManager::SendNetworkMessage(buf, 8);
+
+		mCurrentDrawerPlayerID = mPlayerOrder[mCurrentPlayerIndex];
+	}
+}
+
+void Game::UpdateNextWord()
+{
+	if (NetworkManager::IsConnected() && mIsServer)
+	{
+		std::string word = mWordlist[rand() % mWordlist.size()];
+
+		charbuf buf;
+		int offset = 0;
+		int idPackedData = 0;
+		idPackedData |= mPlayerID;
+		memcpy(buf + offset, &idPackedData, sizeof(int));
+		offset += sizeof(int);
+
+		int packedData = 0;
+		packedData |= ObjectNetworkMessageType::NEXTWORD;
+		packedData |= word.length() << 8;
+		memcpy(buf + offset, &packedData, sizeof(int));
+		offset += sizeof(int);
+
+		memcpy(buf + offset, word.c_str(), word.length());
+
+		NetworkManager::SendNetworkMessage(buf, 8 + word.length());
+
+		mNextWord = word;
+	}
 }
 
 void Game::setupOpenGL(int width, int height)
@@ -185,6 +252,7 @@ void Game::loadMedia()
 		std::stringstream ss;
 		ss << mPlayerID << ": ";
 		mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
+		mPlayerOrder.push_back(mPlayerID);
 	}
 
 	// std::string word = mWordlist[rand() % mWordlist.size()];
@@ -321,11 +389,30 @@ void Game::processCommandBuffer(charbuf & buf, int bufSize)
 					delete mTextObjects.front();
 					mTextObjects.erase(mTextObjects.begin());
 				}
+
+				std::string textGuess = textRec;
+				if (mCurrentGameStateID == GameState::Drawing && mIsServer)
+				{
+					((DrawingGameState*)mStateMachine->GetCurrentState())->RecieveGuess(textGuess, playerID);
+				}
+
 				break;
 			}
 			case GAMESTATECHANGE:
 				ChangeGameStateLocal((GameState)x);
 				break;
+			case NEXTDRAWERID:
+				mCurrentDrawerPlayerID = x;
+				break;
+			case NEXTWORD:
+			{
+				char textRec[128];
+				memcpy(textRec, buf + offset, textLength);
+				textRec[textLength] = '\0';
+				offset += textLength;
+				mNextWord = textRec;
+				break;
+			}
 		}
 	}
 }
@@ -427,6 +514,12 @@ void Game::handleEvents()
 		std::stringstream ss;
 		ss << mPlayerID << ": ";
 		mTextObjects.push_back(mNextTextObject);
+		std::string textGuess = mNextTextObject->getText();
+		if (mCurrentGameStateID == GameState::Drawing && mIsServer)
+		{
+			((DrawingGameState*)mStateMachine->GetCurrentState())->RecieveGuess(textGuess, 0);
+		}
+
 		mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
 
 		if (mTextObjects.size() > MAX_TEXT_LINES)

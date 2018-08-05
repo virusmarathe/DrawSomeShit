@@ -22,12 +22,14 @@
 #include "FontSheet.h";
 #include "TextObject.h"
 #include "SelectWordGameState.h"
+#include "DrawingGameState.h"
 #include "ResetGameState.h"
 
 enum GameState
 {
 	Reset,
-	SelectWord
+	SelectWord,
+	Drawing
 };
 
 class Game
@@ -61,6 +63,15 @@ public:
 
 	bool isServer() { return mIsServer; }
 
+	void OnNewPlayerConnected(int id);
+
+	void UpdateNextDrawer();
+
+	int GetCurrentDrawerPlayerID() { return mCurrentDrawerPlayerID; }
+
+	void UpdateNextWord();
+	std::string GetNextWord() {	return mNextWord; }
+
 private:
 	void setupOpenGL(int width, int height);
 	void loadMedia();
@@ -84,7 +95,7 @@ private:
 	bool keysPressed[SDL_NUM_SCANCODES];
 
 	FontSheet * mTestFontSheet;
-	GameObject * mNextTextObject;
+	TextObject * mNextTextObject;
 
 	std::vector<GameObject *> mNetworkedGameObjectList;
 	std::map<int, GameObject*> mNetworkedGameObjectMap;
@@ -97,7 +108,13 @@ private:
 
 	StateMachine<Game> * mStateMachine;
 	std::map<GameState, State<Game>*> mGameStates;
+	GameState mCurrentGameStateID;
 
 	bool mIsServer;
+
+	std::vector<int> mPlayerOrder;
+	int mCurrentPlayerIndex;
+	int mCurrentDrawerPlayerID;
+	std::string mNextWord;
 };
 

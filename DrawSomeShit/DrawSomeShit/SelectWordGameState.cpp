@@ -11,11 +11,25 @@ SelectWordGameState::~SelectWordGameState()
 
 void SelectWordGameState::Enter(Game * gameRef)
 {
-	gameRef->SetCurrentWord("Choose a word...");
+	if (mIsServer)
+	{
+		gameRef->UpdateNextDrawer();
+		gameRef->UpdateNextWord();
+	}
+	gameRef->SetCurrentWord("Selecting next word...");
+	mfTimer = 0.0f;
 }
 
 void SelectWordGameState::Update(Game * gameRef, float deltaTime)
 {
+	if (mIsServer)
+	{
+		mfTimer += deltaTime;
+		if (mfTimer > 5.0f)
+		{
+			gameRef->ChangeGameStateServer(GameState::Drawing);
+		}
+	}
 }
 
 void SelectWordGameState::Exit(Game * gameRef)

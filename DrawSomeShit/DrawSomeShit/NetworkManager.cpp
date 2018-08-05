@@ -1,4 +1,5 @@
 #include "NetworkManager.h"
+#include "Game.h"
 
 #define SDLNET_ERROR(s) std::cerr << s << ": " << SDLNet_GetError() << std::endl
 #define PORT 6969
@@ -341,6 +342,7 @@ bool HostSocketTCP::Accept(ClientSocketTCP &clientSocket)
 		clientSocket.SetSocket(sock);
 		int nextID = GetNextPlayerID();
 		SDLNet_TCP_Send(sock, &nextID, sizeof(int));
+		Game::Instance()->OnNewPlayerConnected(nextID);
 		return true;
 	}
 	return false;
