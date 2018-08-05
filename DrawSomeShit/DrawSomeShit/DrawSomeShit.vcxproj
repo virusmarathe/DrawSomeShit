@@ -25,6 +25,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="PencilObject.cpp" />
+    <ClCompile Include="ResetGameState.cpp" />
+    <ClCompile Include="SelectWordGameState.cpp" />
     <ClCompile Include="SpriteObject.cpp" />
     <ClCompile Include="SpriteSheet.cpp" />
     <ClCompile Include="TextObject.cpp" />
@@ -38,7 +40,9 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="NetworkManager.h" />
     <ClInclude Include="PencilObject.h" />
+    <ClInclude Include="ResetGameState.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SelectWordGameState.h" />
     <ClInclude Include="SpriteObject.h" />
     <ClInclude Include="SpriteSheet.h" />
     <ClInclude Include="State.h" />

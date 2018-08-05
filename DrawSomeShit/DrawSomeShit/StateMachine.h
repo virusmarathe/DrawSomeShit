@@ -29,7 +29,10 @@ public:
 	// use change state when no history needs to be saved
 	void ChangeState(State<T> * state)
 	{
-		m_CurrentState->Exit(m_Owner);
+		if (m_CurrentState != NULL)
+		{
+			m_CurrentState->Exit(m_Owner);
+		}
 		m_CurrentState = state;
 		m_CurrentState->Enter(m_Owner);
 	}

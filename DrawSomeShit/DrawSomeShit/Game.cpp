@@ -79,6 +79,43 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 	setupOpenGL(width, height);
 	mLastFrameTime = SDL_GetTicks();
 	loadMedia();
+
+	mGameStates[GameState::Reset] = new ResetGameState(mIsServer);
+	mGameStates[GameState::SelectWord] = new SelectWordGameState(mIsServer);
+	mStateMachine->ChangeState(mGameStates[GameState::Reset]);
+}
+
+void Game::ChangeGameStateServer(GameState state)
+{
+	if (NetworkManager::IsConnected() && mIsServer)
+	{
+		charbuf buf;
+		int offset = 0;
+
+		int idPackedData = 0;
+		idPackedData |= mPlayerID;
+		//int id = obj->GetID();
+		memcpy(buf + offset, &idPackedData, sizeof(int));
+		offset += sizeof(int);
+
+		int packedData = 0;	// 32 bit data
+		packedData |= ObjectNetworkMessageType::GAMESTATECHANGE; // 0-7 bits command/id
+		packedData |= state << 8;
+		memcpy(buf + offset, &packedData, sizeof(int));
+		NetworkManager::SendNetworkMessage(buf, 8);
+
+		ChangeGameStateLocal(state);
+	}
+}
+
+void Game::ChangeGameStateLocal(GameState state)
+{
+	mStateMachine->ChangeState(mGameStates[state]);
+}
+
+void Game::SetCurrentWord(std::string str)
+{
+	mCurrentWord->setText(str);
 }
 
 void Game::setupOpenGL(int width, int height)
@@ -150,8 +187,8 @@ void Game::loadMedia()
 		mNextTextObject = new TextObject(Vector2(100, mScreenHeight - 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, ss.str());
 	}
 
-	std::string word = mWordlist[rand() % mWordlist.size()];
-	mCurrentWord = new TextObject(Vector2(mScreenWidth / 2.0f, 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, word);
+	// std::string word = mWordlist[rand() % mWordlist.size()];
+	mCurrentWord = new TextObject(Vector2(mScreenWidth / 2.0f, 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, "");
 }
 
 void Game::setupConnection()
@@ -188,6 +225,11 @@ void Game::setupConnection()
 	if (NetworkManager::mConnectionType == ConnectionType::HOST)
 	{
 		mPlayerID = 0;
+		mIsServer = true;
+	}
+	else
+	{
+		mIsServer = false;
 	}
 }
 
@@ -225,61 +267,65 @@ void Game::processCommandBuffer(charbuf & buf, int bufSize)
 
 		switch (type2)
 		{
-		case CREATE:
-		{
-			PencilObject * obj = new PencilObject(Vector2((float)x, (float)y), id, playerID);
-			std::cout << "Created object id " << obj->GetID() << std::endl;
-			mNetworkedGameObjectList.push_back(obj);
-			mNetworkedGameObjectMap[obj->GetID()] = obj;
-			break;
-		}
-		case UPDATE:
-		case FINISH:
-			if (mNetworkedGameObjectList.size() > 0)
+			case CREATE:
 			{
-				//mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(packedData);
-				if (mNetworkedGameObjectMap[id] != NULL)
-				{
-					mNetworkedGameObjectMap[id]->HandleNetworkData(packedData);
-				}
+				PencilObject * obj = new PencilObject(Vector2((float)x, (float)y), id, playerID);
+				std::cout << "Created object id " << obj->GetID() << std::endl;
+				mNetworkedGameObjectList.push_back(obj);
+				mNetworkedGameObjectMap[obj->GetID()] = obj;
+				break;
 			}
-			break;
-		case REMOVE:
-			if (mNetworkedGameObjectMap[id] != NULL)
-			{
-				for (std::vector<GameObject *>::iterator it = mNetworkedGameObjectList.begin(); it != mNetworkedGameObjectList.end(); ++it)
+			case UPDATE:
+			case FINISH:
+				if (mNetworkedGameObjectList.size() > 0)
 				{
-					if ((*it)->GetID() == id)
+					//mNetworkedGameObjectList[mNetworkedGameObjectList.size() - 1]->HandleNetworkData(packedData);
+					if (mNetworkedGameObjectMap[id] != NULL)
 					{
-						mNetworkedGameObjectList.erase(it);
-						break;
+						mNetworkedGameObjectMap[id]->HandleNetworkData(packedData);
 					}
 				}
-				mNetworkedGameObjectMap.erase(id);
-				delete mNetworkedGameObjectMap[id];
-			}
-			break;
-		case TEXT:
-			char textRec[128];
-			memcpy(textRec, buf + offset, textLength);
-			textRec[textLength] = '\0';
-			offset += textLength;
-			TextObject * mNewText = new TextObject(Vector2(100, mScreenHeight - 100), id, playerID, mTestFontSheet, textRec);
-			mNewText->setSent(true);
-			mTextObjects.push_back(mNewText);
-			for (int i = 0; i < mTextObjects.size(); i++)
+				break;
+			case REMOVE:
+				if (mNetworkedGameObjectMap[id] != NULL)
+				{
+					for (std::vector<GameObject *>::iterator it = mNetworkedGameObjectList.begin(); it != mNetworkedGameObjectList.end(); ++it)
+					{
+						if ((*it)->GetID() == id)
+						{
+							mNetworkedGameObjectList.erase(it);
+							break;
+						}
+					}
+					mNetworkedGameObjectMap.erase(id);
+					delete mNetworkedGameObjectMap[id];
+				}
+				break;
+			case TEXT:
 			{
-				((TextObject*)mTextObjects[i])->forceUp();
-			}
-			mNewText = NULL;
+				char textRec[128];
+				memcpy(textRec, buf + offset, textLength);
+				textRec[textLength] = '\0';
+				offset += textLength;
+				TextObject * mNewText = new TextObject(Vector2(100, mScreenHeight - 100), id, playerID, mTestFontSheet, textRec);
+				mNewText->setSent(true);
+				mTextObjects.push_back(mNewText);
+				for (int i = 0; i < mTextObjects.size(); i++)
+				{
+					((TextObject*)mTextObjects[i])->forceUp();
+				}
+				mNewText = NULL;
 
-			if (mTextObjects.size() > MAX_TEXT_LINES)
-			{
-				delete mTextObjects.front();
-				mTextObjects.erase(mTextObjects.begin());
+				if (mTextObjects.size() > MAX_TEXT_LINES)
+				{
+					delete mTextObjects.front();
+					mTextObjects.erase(mTextObjects.begin());
+				}
+				break;
 			}
-
-			break;
+			case GAMESTATECHANGE:
+				ChangeGameStateLocal((GameState)x);
+				break;
 		}
 	}
 }
@@ -420,6 +466,8 @@ void Game::update()
 		}
 	}
 
+	mStateMachine->Update(deltaTime);
+
 	mLastFrameTime = currentFrameTime;
 }
 
@@ -492,6 +540,11 @@ void Game::clean()
 	}
 
 	delete mCurrentWord;
+
+	for (std::map<GameState, State<Game>*>::iterator it = mGameStates.begin(); it != mGameStates.end(); ++it)
+	{
+		delete it->second;
+	}
 
 	delete mStateMachine;
 	

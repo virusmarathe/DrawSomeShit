@@ -21,6 +21,14 @@
 #include "TextureObject.h"
 #include "FontSheet.h";
 #include "TextObject.h"
+#include "SelectWordGameState.h"
+#include "ResetGameState.h"
+
+enum GameState
+{
+	Reset,
+	SelectWord
+};
 
 class Game
 {
@@ -45,6 +53,13 @@ public:
 	bool running() { return mIsRunning; }
 
 	int GetPlayerID() { return mPlayerID; }
+
+	void ChangeGameStateServer(GameState state);
+	void ChangeGameStateLocal(GameState state);
+
+	void SetCurrentWord(std::string str);
+
+	bool isServer() { return mIsServer; }
 
 private:
 	void setupOpenGL(int width, int height);
@@ -78,8 +93,11 @@ private:
 	bool mEnterWasPressed = true;
 
 	std::vector<std::string> mWordlist;
-	GameObject * mCurrentWord;
+	TextObject * mCurrentWord;
 
 	StateMachine<Game> * mStateMachine;
+	std::map<GameState, State<Game>*> mGameStates;
+
+	bool mIsServer;
 };
 
