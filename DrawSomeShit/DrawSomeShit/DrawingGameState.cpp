@@ -15,6 +15,8 @@ DrawingGameState::~DrawingGameState()
 
 void DrawingGameState::Enter(Game * gameRef)
 {
+	gameRef->ClearDrawings();
+
 	mfTimer = 0.0f;
 	std::string nextWord = gameRef->GetNextWord();
 	mCachedCurrentWord = nextWord;

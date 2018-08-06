@@ -185,6 +185,28 @@ void Game::UpdateNextWord()
 	}
 }
 
+void Game::ClearDrawings()
+{
+	for (size_t i = 0; i < mActiveGameObjectList.size(); i++)
+	{
+		if (mActiveGameObjectList[i] != NULL)
+		{
+			delete mActiveGameObjectList[i];
+		}
+	}
+
+	for (size_t i = 0; i < mNetworkedGameObjectList.size(); i++)
+	{
+		if (mNetworkedGameObjectList[i] != NULL)
+		{
+			delete mNetworkedGameObjectList[i];
+		}
+	}
+
+	mActiveGameObjectList.clear();
+	mNetworkedGameObjectList.clear();
+}
+
 void Game::setupOpenGL(int width, int height)
 {
 	// initialize GLEW

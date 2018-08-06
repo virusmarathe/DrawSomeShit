@@ -72,6 +72,8 @@ public:
 	void UpdateNextWord();
 	std::string GetNextWord() {	return mNextWord; }
 
+	void ClearDrawings();
+
 private:
 	void setupOpenGL(int width, int height);
 	void loadMedia();

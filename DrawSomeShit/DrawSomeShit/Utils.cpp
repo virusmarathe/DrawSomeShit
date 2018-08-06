@@ -46,5 +46,9 @@ int Utils::GetNextObjectIDForPlayer(int playerID)
 {
 	int id = playerID * MAX_OBJECTS + Utils::mIDCounter;
 	Utils::mIDCounter++;
+	if (Utils::mIDCounter >= MAX_OBJECTS)
+	{
+		Utils::mIDCounter = 0;
+	}
 	return id;
 }
