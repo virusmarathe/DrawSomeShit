@@ -13,6 +13,7 @@ TextObject::TextObject(Vector2 pos, int objectID, int ownerID, FontSheet * fontS
 	mClips = mFontSheetRef->getClipsRef();
 	mIsSent = false;
 	mColor = Utils::GetColorForPlayer(mOwnerID);
+	m_StartLength = text.length();
 }
 
 
@@ -126,7 +127,7 @@ void TextObject::handleInput(SDL_Event event)
 		}
 		else if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE)
 		{
-			if (!mIsSent && mText.length() > 0)
+			if (!mIsSent && mText.length() > m_StartLength)
 			{
 				mText.pop_back();
 			}

@@ -258,7 +258,7 @@ void Game::loadMedia()
 		std::cout << "Failed to load font sheet!" << std::endl;
 	}
 
-	std::ifstream myFile("Assets/easy.txt");
+	std::ifstream myFile("Assets/memes.txt");
 	std::string line;
 	if (myFile)
 	{

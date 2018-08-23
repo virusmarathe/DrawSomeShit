@@ -32,5 +32,6 @@ private:
 	std::vector<Rect> mClips;
 	bool mIsSent;
 	Color mColor;
+	int m_StartLength;
 };
 
