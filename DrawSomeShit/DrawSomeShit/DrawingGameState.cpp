@@ -35,14 +35,13 @@ void DrawingGameState::Enter(Game * gameRef)
 
 void DrawingGameState::Update(Game * gameRef, float deltaTime)
 {
-	if (mIsServer)
+	mfTimer += deltaTime;
+	if (mIsServer && mfTimer > ROUND_TIME || wordGuessed)
 	{
-		mfTimer += deltaTime;
-		if (mfTimer > ROUND_TIME || wordGuessed)
-		{
-			gameRef->ChangeGameStateServer(GameState::SelectWord);
-		}
+		gameRef->ChangeGameStateServer(GameState::SelectWord);
 	}
+
+	gameRef->SetTimerText((int)(ROUND_TIME - mfTimer));
 }
 
 void DrawingGameState::Exit(Game * gameRef)
@@ -55,6 +54,8 @@ void DrawingGameState::RecieveGuess(std::string guess, int playerID)
 
 	int index = guess.find_first_of(':');
 	guess = guess.substr(index+2, guess.length());
+	Utils::ToLowerCase(guess);
+
 	if (mIsServer)
 	{
 		if (guess == mCachedCurrentWord)

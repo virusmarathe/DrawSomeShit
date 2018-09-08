@@ -74,6 +74,8 @@ public:
 
 	void ClearDrawings();
 
+	void SetTimerText(int val);
+
 private:
 	void setupOpenGL(int width, int height);
 	void loadMedia();
@@ -107,6 +109,7 @@ private:
 
 	std::vector<std::string> mWordlist;
 	TextObject * mCurrentWord;
+	TextObject * mTimerText;
 
 	StateMachine<Game> * mStateMachine;
 	std::map<GameState, State<Game>*> mGameStates;

@@ -35,6 +35,7 @@ public:
 	virtual void handleInput(SDL_Event event) = 0;
 
 	void setPosition(Vector2 pos) { mPosition = pos; }
+	Vector2 getPosition() { return mPosition; }
 
 	virtual void HandleNetworkData(int packedData);
 

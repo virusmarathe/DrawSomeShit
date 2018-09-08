@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <locale>
 
 struct Color
 {
@@ -18,6 +20,7 @@ class Utils
 public:
 	static Color GetColorForPlayer(int playerID);
 	static int GetNextObjectIDForPlayer(int playerID);
+	static void ToLowerCase(std::string &s);
 
 	static int mIDCounter;
 };

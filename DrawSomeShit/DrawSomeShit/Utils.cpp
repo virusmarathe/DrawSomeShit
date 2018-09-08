@@ -52,3 +52,13 @@ int Utils::GetNextObjectIDForPlayer(int playerID)
 	}
 	return id;
 }
+
+void Utils::ToLowerCase(std::string &s)
+{
+	std::locale loc;
+
+	for (std::string::size_type i = 0; i < s.length(); i++)
+	{
+		s[i] = std::tolower(s[i], loc);
+	}
+}

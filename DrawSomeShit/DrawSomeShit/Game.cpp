@@ -163,6 +163,7 @@ void Game::UpdateNextWord()
 	if (NetworkManager::IsConnected() && mIsServer)
 	{
 		std::string word = mWordlist[rand() % mWordlist.size()];
+		Utils::ToLowerCase(word);
 
 		charbuf buf;
 		int offset = 0;
@@ -205,6 +206,11 @@ void Game::ClearDrawings()
 
 	mActiveGameObjectList.clear();
 	mNetworkedGameObjectList.clear();
+}
+
+void Game::SetTimerText(int val)
+{
+	mTimerText->setText(std::to_string(val));
 }
 
 void Game::setupOpenGL(int width, int height)
@@ -279,6 +285,7 @@ void Game::loadMedia()
 
 	// std::string word = mWordlist[rand() % mWordlist.size()];
 	mCurrentWord = new TextObject(Vector2(mScreenWidth / 2.0f, 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, "");
+	mTimerText = new TextObject(Vector2(mScreenWidth / 2.0f - 100, 100), Utils::GetNextObjectIDForPlayer(mPlayerID), mPlayerID, mTestFontSheet, "");
 }
 
 void Game::setupConnection()
@@ -622,6 +629,10 @@ void Game::render()
 	{
 		mCurrentWord->render();
 	}
+	if (mTimerText != NULL)
+	{
+		mTimerText->render();
+	}
 
 	SDL_GL_SwapWindow(mWindow);
 }
@@ -655,6 +666,8 @@ void Game::clean()
 	}
 
 	delete mCurrentWord;
+	delete mNextTextObject;
+	delete mTimerText;
 
 	for (std::map<GameState, State<Game>*>::iterator it = mGameStates.begin(); it != mGameStates.end(); ++it)
 	{
