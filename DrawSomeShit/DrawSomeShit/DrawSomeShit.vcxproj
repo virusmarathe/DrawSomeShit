@@ -36,6 +36,7 @@
     <ClCompile Include="Vector2.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Delegate.h" />
     <ClInclude Include="DrawingGameState.h" />
     <ClInclude Include="FontSheet.h" />
     <ClInclude Include="Game.h" />
