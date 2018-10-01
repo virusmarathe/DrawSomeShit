@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DrawingGameState.cpp" />
+    <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="FontSheet.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObject.cpp" />
@@ -38,6 +39,7 @@
   <ItemGroup>
     <ClInclude Include="Delegate.h" />
     <ClInclude Include="DrawingGameState.h" />
+    <ClInclude Include="EventManager.h" />
     <ClInclude Include="FontSheet.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />

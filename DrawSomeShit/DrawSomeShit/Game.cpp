@@ -28,6 +28,7 @@ Game::Game() : mIsRunning(false), mLastFrameTime(0), mIsMouseDown(false)
 	mNextWord = "";
 
 	mStateMachine = new StateMachine<Game>(this);
+	mEventManager = new EventManager();
 }
 
 
@@ -88,6 +89,10 @@ void Game::init(const char * title, int xPos, int yPos, int width, int height, b
 	mGameStates[GameState::Drawing] = new DrawingGameState(mIsServer);
 	mStateMachine->ChangeState(mGameStates[GameState::Reset]);
 	mCurrentGameStateID = GameState::Reset;
+
+	//EventManager::Instance()->AddListener(EventType::TEST_EVENT, this);
+	//EventManager::Instance()->TriggerEvent(EventType::TEST_EVENT, &(EventParam((char*)"testing this shitty thing.")));
+	//EventManager::Instance()->RemoveListener(EventType::TEST_EVENT, this);
 }
 
 void Game::ChangeGameStateServer(GameState state)
@@ -211,6 +216,18 @@ void Game::ClearDrawings()
 void Game::SetTimerText(int val)
 {
 	mTimerText->setText(std::to_string(val));
+}
+
+void Game::HandleEvent(EventParam * param)
+{
+	// event handling example
+	/*
+	if (param->m_ID == TEST_EVENT)
+	{
+		char * data = static_cast<char*>(param->m_Data);
+		std::cout << data << std::endl;
+	}
+	*/
 }
 
 void Game::setupOpenGL(int width, int height)
@@ -675,6 +692,7 @@ void Game::clean()
 	}
 
 	delete mStateMachine;
+	delete mEventManager;
 	
 	NetworkManager::Quit();
 	SDL_DestroyWindow(mWindow);

@@ -15,6 +15,7 @@
 #include <IL/il.h>
 #include <IL/ilu.h>
 #include "StateMachine.h"
+#include "EventManager.h"
 #include "PencilObject.h"
 #include "Vector2.h"
 #include "NetworkManager.h"
@@ -32,7 +33,7 @@ enum GameState
 	Drawing
 };
 
-class Game
+class Game : public IEventListener
 {
 public:
 	Game();
@@ -75,6 +76,8 @@ public:
 	void ClearDrawings();
 
 	void SetTimerText(int val);
+	
+	virtual void HandleEvent(EventParam * param);
 
 private:
 	void setupOpenGL(int width, int height);
@@ -121,5 +124,7 @@ private:
 	int mCurrentPlayerIndex;
 	int mCurrentDrawerPlayerID;
 	std::string mNextWord;
+
+	EventManager * mEventManager;
 };
 
